@@ -1,0 +1,103 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Wrench, Home, FileText, LogOut } from "lucide-react";
+
+interface ResidentNavProps {
+  profile: {
+    full_name: string;
+    email: string;
+    room_number: string | null;
+  };
+}
+
+export default function ResidentNav({ profile }: ResidentNavProps) {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  return (
+    <nav className="border-b bg-background">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="flex items-center gap-8">
+          <Link href="/resident" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded bg-primary">
+              <Wrench className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-bold">Fixit</span>
+          </Link>
+          <div className="hidden items-center gap-4 md:flex">
+            <Link href="/resident">
+              <Button variant="ghost" size="sm">
+                <Home className="mr-2 h-4 w-4" />
+                หน้าหลัก
+              </Button>
+            </Link>
+            <Link href="/resident/tickets">
+              <Button variant="ghost" size="sm">
+                <FileText className="mr-2 h-4 w-4" />
+                รายการแจ้งซ่อม
+              </Button>
+            </Link>
+          </div>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-10 gap-2">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback>{getInitials(profile.full_name)}</AvatarFallback>
+              </Avatar>
+              <div className="hidden flex-col items-start text-left text-sm md:flex">
+                <span className="font-medium">{profile.full_name}</span>
+                {profile.room_number && (
+                  <span className="text-xs text-muted-foreground">
+                    ห้อง {profile.room_number}
+                  </span>
+                )}
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>
+              <div>
+                <p className="font-medium">{profile.full_name}</p>
+                <p className="text-xs text-muted-foreground">{profile.email}</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              ออกจากระบบ
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </nav>
+  );
+}

@@ -1,0 +1,10 @@
+{
+	"servers": {
+		"supabase": {
+			"type": "http",
+			"url": "https://mcp.supabase.com/mcp?project_ref=firtvvsktvlqwhmbzeyh&features=docs,account,database,debugging,functions,development,storage,branching"
+		}
+	},
+	"inputs": []
+	
+}
