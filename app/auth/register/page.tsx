@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { Wrench } from "lucide-react";
 
@@ -18,7 +17,6 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     fullName: "",
-    role: "resident",
     roomNumber: "",
     phone: "",
   });
@@ -53,7 +51,7 @@ export default function RegisterPage() {
         options: {
           data: {
             full_name: formData.fullName,
-            role: formData.role,
+            role: "resident",
           },
         },
       });
@@ -73,12 +71,7 @@ export default function RegisterPage() {
 
         if (updateError) throw updateError;
 
-        // Redirect ตาม role
-        if (formData.role === "admin") {
-          router.push("/admin");
-        } else {
-          router.push("/resident");
-        }
+        router.push("/resident");
         router.refresh();
       }
     } catch (error: any) {
@@ -150,21 +143,6 @@ export default function RegisterPage() {
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 required
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">บทบาท</Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value) => setFormData({ ...formData, role: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="เลือกบทบาท" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="resident">ผู้พักอาศัย</SelectItem>
-                  <SelectItem value="admin">ผู้ดูแลหอพัก</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="roomNumber">หมายเลขห้อง</Label>
