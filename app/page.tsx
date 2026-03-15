@@ -25,7 +25,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="flex-1 bg-gradient-to-b from-primary/10 to-background">
+      <section className="flex-1 bg-linear-to-b from-primary/10 to-background">
         <div className="container mx-auto px-4 py-20">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
