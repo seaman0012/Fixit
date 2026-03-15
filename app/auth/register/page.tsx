@@ -82,7 +82,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-primary/10 to-background p-4">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-r from-primary/15 to-primary/5">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary">
@@ -97,7 +97,7 @@ export default function RegisterPage() {
           <CardContent className="space-y-4">
             {error && (
               <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
+                {error} 
               </div>
             )}
             <div className="space-y-2">
@@ -165,7 +165,7 @@ export default function RegisterPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="flex flex-col space-y-4 mt-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "กำลังสมัครสมาชิก..." : "สมัครสมาชิก"}
             </Button>
