@@ -16,6 +16,9 @@ export type Database = {
           full_name: string
           role: 'resident' | 'admin'
           room_number: string | null
+          room_verification_status: 'pending' | 'verified' | 'rejected'
+          room_verified_at: string | null
+          room_verified_by: string | null
           phone: string | null
           avatar_url: string | null
           created_at: string
@@ -27,6 +30,9 @@ export type Database = {
           full_name: string
           role?: 'resident' | 'admin'
           room_number?: string | null
+          room_verification_status?: 'pending' | 'verified' | 'rejected'
+          room_verified_at?: string | null
+          room_verified_by?: string | null
           phone?: string | null
           avatar_url?: string | null
           created_at?: string
@@ -38,6 +44,9 @@ export type Database = {
           full_name?: string
           role?: 'resident' | 'admin'
           room_number?: string | null
+          room_verification_status?: 'pending' | 'verified' | 'rejected'
+          room_verified_at?: string | null
+          room_verified_by?: string | null
           phone?: string | null
           avatar_url?: string | null
           created_at?: string
