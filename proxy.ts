@@ -2,6 +2,11 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
+  // API routes
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
