@@ -1,105 +1,50 @@
-# Fixit - ระบบแจ้งซ่อมหอพักแบบครบวงจร
+# Fixit
 
-ระบบแจ้งซ่อมหอพักที่ออกแบบมาเพื่อช่วยให้ผู้พักอาศัยแจ้งปัญหาและติดตามสถานะการซ่อมได้แบบ Real-time พร้อมการแบ่งสิทธิ์การใช้งานชัดเจนระหว่างผู้พักอาศัยและผู้ดูแลหอพัก
+A simple dorm maintenance ticket app with resident and admin flows.
 
-## 🚀 เทคโนโลยีที่ใช้
+## Stack
 
-- **Frontend**: Next.js 16 (App Router), TypeScript
-- **Styling**: TailwindCSS, Shadcn UI
-- **Backend**: Supabase (PostgreSQL, Authentication, Storage, Realtime)
-- **Charts**: Recharts
+- Next.js 16 + TypeScript
+- Supabase (Auth, Postgres, Storage, Realtime)
+- Tailwind CSS + shadcn/ui
 
-## ✨ ฟีเจอร์หลัก
+## Quick Start
 
-### สำหรับผู้พักอาศัย (Resident)
-- ✅ แจ้งซ่อม พร้อมอัปโหลดรูปภาพประกอบ (บังคับแนบรูป)
-- ✅ ติดตามสถานะการซ่อมแบบ Real-time
-- ✅ พูดคุยกับผู้ดูแลผ่านระบบ Comment
-- ✅ ดูประวัติการแจ้งซ่อม
+1. Install dependencies.
 
-### สำหรับผู้ดูแลหอพัก (Admin)
-- ✅ Dashboard แสดงภาพรวมรายการแจ้งซ่อม
-- ✅ จัดการงานและอัปเดตสถานะ
-- ✅ พูดคุยกับผู้แจ้งผ่านระบบ Comment
-- ✅ วิเคราะห์ข้อมูลและสถิติ
-
-## 📦 การติดตั้ง
-
-### 1. ติดตั้ง Dependencies
 ```bash
 npm install
 ```
 
-### 2. Setup Supabase
+2. Create `.env.local`.
 
-#### สร้างโปรเจกต์ Supabase
-1. ไปที่ [Supabase Dashboard](https://app.supabase.com/)
-2. สร้างโปรเจกต์ใหม่
-3. รอจนโปรเจกต์สร้างเสร็จ
-
-#### รัน Database Schema
-1. ไปที่ SQL Editor ใน Supabase Dashboard
-2. Copy โค้ดทั้งหมดจากไฟล์ `supabase-schema.sql`
-3. รันใน SQL Editor
-
-#### ตั้งค่า Environment Variables
-แก้ไขไฟล์ `.env.local`:
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Optional LINE integration
+LINE_CHANNEL_ACCESS_TOKEN=your_line_channel_access_token
+LINE_ADMIN_USER_IDS=user_id_1,user_id_2
+LINE_CHANNEL_SECRET=your_line_channel_secret
 ```
 
-หา URL และ Anon Key จาก Project Settings → API
+3. Run the app.
 
-### 3. รันโปรเจกต์
 ```bash
 npm run dev
 ```
 
-เปิดเบราว์เซอร์ไปที่ [http://localhost:3000](http://localhost:3000)
+Open `http://localhost:3000`.
 
-## 📱 การใช้งาน
+## Scripts
 
-### การสมัครสมาชิก
-1. คลิก "สมัครสมาชิก"
-2. กรอกข้อมูล (ชื่อ, อีเมล, รหัสผ่าน, บทบาท, หมายเลขห้อง)
-3. เลือกบทบาท: ผู้พักอาศัย หรือ ผู้ดูแล
+- `npm run dev` - start development server
+- `npm run build` - build for production
+- `npm run start` - start production server
+- `npm run lint` - run ESLint
 
-### สำหรับผู้พักอาศัย
-- แจ้งซ่อม: คลิกปุ่ม "แจ้งซ่อม" → กรอกข้อมูล → **แนบรูปภาพ** → ส่ง
-- ติดตามสถานะ: ดูที่หน้า "รายการแจ้งซ่อม"
-- Comment: คลิกที่รายการ → พิมพ์ข้อความ → ส่ง
+## Notes
 
-### สำหรับผู้ดูแล
-- ดู Dashboard: ดูภาพรวมทั้งหมด
-- จัดการงาน: เมนู "จัดการงาน" → เลือกรายการ → อัปเดตสถานะ
-- วิเคราะห์: เมนู "วิเคราะห์ข้อมูล" → ดูกราฟและสถิติ
-
-## 🗄️ Database Schema
-
-- `profiles` - ข้อมูลผู้ใช้
-- `tickets` - รายการแจ้งซ่อม
-- `comments` - ความคิดเห็น
-- `ticket_history` - ประวัติการเปลี่ยนแปลง
-
-## 🔒 Security
-
-- Row Level Security (RLS)
-- Role-based Access Control
-- Supabase Authentication
-
-## 📊 Real-time Features
-
-- อัปเดตสถานะแบบ Real-time
-- Comment system แบบ Real-time
-- Supabase Realtime subscriptions
-
----
-
-Made with ❤️ using Next.js & Supabase
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Residents can create and track maintenance tickets.
+- Admins can manage ticket status and view analytics.
+- LINE messaging is optional and environment-driven.
