@@ -149,6 +149,18 @@ export default function NewTicketPage() {
 
       if (error) throw error;
 
+      try {
+        await fetch("/api/line/notify-admin", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ticketId: data.id }),
+        });
+      } catch (notifyError) {
+        console.error("Failed to notify admins via LINE", notifyError);
+      }
+
       // Show success dialog instead of immediate redirect
       setCreatedTicketId(data.id);
       setShowSuccessDialog(true);
