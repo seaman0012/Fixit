@@ -173,6 +173,10 @@ export default function NewTicketPage() {
   };
 
   const handleViewTicket = () => {
+    if (!createdTicketId) {
+      return;
+    }
+
     router.push(`/resident/tickets/${createdTicketId}`);
     router.refresh();
   };
@@ -386,9 +390,7 @@ export default function NewTicketPage() {
       </Card>
 
       {/* Success Dialog */}
-      <Dialog open={showSuccessDialog} onOpenChange={(open) => {
-        if (!open) handleViewTicket(); // Navigate to ticket when dialog closes
-      }}>
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
