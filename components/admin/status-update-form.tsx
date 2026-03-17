@@ -58,11 +58,7 @@ export default function StatusUpdateForm({ ticket }: StatusUpdateFormProps) {
         updateData.completed_at = new Date().toISOString()
       }
 
-      const { error } = await supabase
-        .from('tickets')
-        // @ts-expect-error - Supabase type issue
-        .update(updateData)
-        .eq('id', ticket.id)
+      const { error } = await supabase.from('tickets').update(updateData).eq('id', ticket.id)
 
       if (error) throw error
 

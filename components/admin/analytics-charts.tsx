@@ -34,7 +34,7 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
           <CardTitle>สถิติตามประเภทอุปกรณ์</CardTitle>
           <CardDescription>จำนวนการแจ้งซ่อมแบ่งตามประเภท</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px]">
+        <CardContent className="h-75">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={categoryStats}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -60,7 +60,7 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
           <CardTitle>สถิติตามสถานะ</CardTitle>
           <CardDescription>สัดส่วนของรายการตามสถานะปัจจุบัน</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px]">
+        <CardContent className="h-75">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
