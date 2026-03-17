@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -9,6 +10,42 @@ import { th } from 'date-fns/locale'
 import Image from 'next/image'
 import CommentSection from '@/components/resident/comment-section'
 import { statusConfig, categoryConfig, priorityConfig } from '@/lib/constants'
+import type { TicketWithProfile, CommentWithProfile } from '@/types'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createServerSupabaseClient()
+
+  const { data: ticket } = (await supabase
+    .from('tickets')
+    .select('title, description, status')
+    .eq('id', id)
+    .single()) as { data: any; error: any }
+
+  if (!ticket) {
+    return {
+      title: 'ไม่พบรายการ',
+    }
+  }
+
+  const statusLabel =
+    statusConfig[ticket.status as keyof typeof statusConfig]?.label || ticket.status
+
+  return {
+    title: `${ticket.title} - Fixit`,
+    description: `${ticket.description?.substring(0, 150)}... | สถานะ: ${statusLabel}`,
+    openGraph: {
+      title: ticket.title,
+      description: ticket.description?.substring(0, 150),
+      type: 'article',
+      siteName: 'Fixit',
+    },
+  }
+}
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -35,19 +72,19 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     `
     )
     .eq('id', id)
-    .single()) as { data: any; error: any }
+    .single()) as { data: TicketWithProfile; error: any }
 
   if (error || !ticket) {
     notFound()
   }
 
   // ตรวจสอบว่าเป็นเจ้าของ ticket หรือไม่
-  if ((ticket as any).user_id !== user.id) {
+  if (ticket.user_id !== user.id) {
     redirect('/resident')
   }
 
   // ดึงข้อมูล comments
-  const { data: comments } = await supabase
+  const { data: commentsRaw } = await supabase
     .from('comments')
     .select(
       `
@@ -61,9 +98,18 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     .eq('ticket_id', id)
     .order('created_at', { ascending: true })
 
-  const status = statusConfig[(ticket as any).status as keyof typeof statusConfig]
+  // Serialize comments to ensure created_at is a string (not Date object)
+  const comments = (commentsRaw || []).map((comment: any) => ({
+    ...comment,
+    created_at:
+      typeof comment.created_at === 'string'
+        ? comment.created_at
+        : new Date(comment.created_at).toISOString(),
+  })) as CommentWithProfile[]
+
+  const status = statusConfig[ticket.status as keyof typeof statusConfig]
   const StatusIcon = status.icon
-  const priority = priorityConfig[(ticket as any).priority as keyof typeof priorityConfig]
+  const priority = priorityConfig[ticket.priority as keyof typeof priorityConfig]
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -84,7 +130,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                   <CardTitle>รายละเอียด</CardTitle>
                   <CardDescription>
                     สร้างเมื่อ{' '}
-                    {format(new Date((ticket as any).created_at), 'd MMMM yyyy, HH:mm น.', {
+                    {format(new Date(ticket.created_at!), 'd MMMM yyyy, HH:mm น.', {
                       locale: th,
                     })}
                   </CardDescription>
@@ -98,16 +144,14 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
             <CardContent className="space-y-4">
               <div>
                 <h3 className="mb-2 font-medium">คำอธิบาย</h3>
-                <p className="text-muted-foreground whitespace-pre-wrap">
-                  {(ticket as any).description}
-                </p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{ticket.description}</p>
               </div>
 
-              {(ticket as any).image_urls && (ticket as any).image_urls.length > 0 && (
+              {ticket.image_urls && ticket.image_urls.length > 0 && (
                 <div>
                   <h3 className="mb-2 font-medium">รูปภาพประกอบ</h3>
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                    {(ticket as any).image_urls.map((url: string, index: number) => (
+                    {ticket.image_urls.map((url: string, index: number) => (
                       <a
                         key={index}
                         href={url}
@@ -119,6 +163,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                           src={url}
                           alt={`Image ${index + 1}`}
                           fill
+                          sizes="(max-width: 768px) 50vw, 33vw"
                           className="object-cover transition-transform hover:scale-105"
                         />
                       </a>
@@ -130,7 +175,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
           </Card>
 
           {/* Comments */}
-          <CommentSection ticketId={id} initialComments={comments || []} />
+          <CommentSection ticketId={id} initialComments={comments} />
         </div>
 
         {/* Sidebar */}
@@ -206,7 +251,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <div className="pb-4">
                   <p className="text-sm font-medium">สร้างรายการ</p>
                   <p className="text-muted-foreground text-xs">
-                    {format(new Date(ticket.created_at), 'd MMM yyyy, HH:mm', { locale: th })}
+                    {format(new Date(ticket.created_at!), 'd MMM yyyy, HH:mm', { locale: th })}
                   </p>
                 </div>
               </div>
@@ -222,7 +267,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                   <div className={ticket.status === 'in_progress' ? '' : 'pb-4'}>
                     <p className="text-sm font-medium">เริ่มดำเนินการ</p>
                     <p className="text-muted-foreground text-xs">
-                      {format(new Date(ticket.updated_at), 'd MMM yyyy, HH:mm', { locale: th })}
+                      {format(new Date(ticket.updated_at!), 'd MMM yyyy, HH:mm', { locale: th })}
                     </p>
                   </div>
                 </div>
