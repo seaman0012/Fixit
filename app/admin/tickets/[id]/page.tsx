@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -10,6 +11,42 @@ import Image from 'next/image'
 import CommentSection from '@/components/resident/comment-section'
 import StatusUpdateForm from '@/components/admin/status-update-form'
 import { statusConfig, categoryConfig, priorityConfig } from '@/lib/constants'
+import type { AdminTicketWithProfile, CommentWithProfile } from '@/types'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createServerSupabaseClient()
+
+  const { data: ticket } = (await supabase
+    .from('tickets')
+    .select('title, description, status')
+    .eq('id', id)
+    .single()) as { data: any; error: any }
+
+  if (!ticket) {
+    return {
+      title: 'ไม่พบรายการ',
+    }
+  }
+
+  const statusLabel =
+    statusConfig[ticket.status as keyof typeof statusConfig]?.label || ticket.status
+
+  return {
+    title: `${ticket.title} - Fixit Admin`,
+    description: `${ticket.description?.substring(0, 150)}... | สถานะ: ${statusLabel}`,
+    openGraph: {
+      title: ticket.title,
+      description: ticket.description?.substring(0, 150),
+      type: 'article',
+      siteName: 'Fixit',
+    },
+  }
+}
 
 export default async function AdminTicketDetailPage({
   params,
@@ -42,14 +79,14 @@ export default async function AdminTicketDetailPage({
     `
     )
     .eq('id', id)
-    .single()) as { data: any; error: any }
+    .single()) as { data: AdminTicketWithProfile; error: any }
 
   if (error || !ticket) {
     notFound()
   }
 
   // ดึงข้อมูล comments
-  const { data: comments } = await supabase
+  const { data: commentsRaw } = await supabase
     .from('comments')
     .select(
       `
@@ -62,6 +99,15 @@ export default async function AdminTicketDetailPage({
     )
     .eq('ticket_id', id)
     .order('created_at', { ascending: true })
+
+  // Serialize comments to ensure created_at is a string (not Date object)
+  const comments = (commentsRaw || []).map((comment: any) => ({
+    ...comment,
+    created_at:
+      typeof comment.created_at === 'string'
+        ? comment.created_at
+        : new Date(comment.created_at).toISOString(),
+  })) as CommentWithProfile[]
 
   const status = statusConfig[ticket.status as keyof typeof statusConfig]
   const StatusIcon = status.icon
@@ -86,7 +132,7 @@ export default async function AdminTicketDetailPage({
                   <CardTitle>รายละเอียด</CardTitle>
                   <CardDescription>
                     สร้างเมื่อ{' '}
-                    {format(new Date(ticket.created_at), 'd MMMM yyyy, HH:mm น.', { locale: th })}
+                    {format(new Date(ticket.created_at!), 'd MMMM yyyy, HH:mm น.', { locale: th })}
                   </CardDescription>
                 </div>
                 <Badge className={status.color}>
@@ -117,6 +163,7 @@ export default async function AdminTicketDetailPage({
                           src={url}
                           alt={`Image ${index + 1}`}
                           fill
+                          sizes="(max-width: 768px) 50vw, 33vw"
                           className="object-cover transition-transform hover:scale-105"
                         />
                       </a>
@@ -131,7 +178,7 @@ export default async function AdminTicketDetailPage({
           <StatusUpdateForm ticket={ticket} />
 
           {/* Comments */}
-          <CommentSection ticketId={id} initialComments={comments || []} userRole="admin" />
+          <CommentSection ticketId={id} initialComments={comments} userRole="admin" />
         </div>
 
         {/* Sidebar */}
