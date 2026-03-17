@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/ui/mode-toggle";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { ModeToggle } from '@/components/ui/mode-toggle'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,38 +13,38 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Wrench, LayoutDashboard, FileText, BarChart3, LogOut } from "lucide-react";
-import Image from "next/image";
+} from '@/components/ui/dropdown-menu'
+import { Wrench, LayoutDashboard, FileText, BarChart3, LogOut } from 'lucide-react'
+import Image from 'next/image'
 
 interface AdminNavProps {
   profile: {
-    full_name: string;
-    email: string;
-  };
+    full_name: string
+    email: string
+  }
 }
 
 export default function AdminNav({ profile }: AdminNavProps) {
-  const router = useRouter();
+  const router = useRouter()
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
-  };
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
 
   const getInitials = (name: string) => {
     return name
-      .split(" ")
+      .split(' ')
       .map((n) => n[0])
-      .join("")
+      .join('')
       .toUpperCase()
-      .slice(0, 2);
-  };
+      .slice(0, 2)
+  }
 
   return (
-    <nav className="border-b bg-background">
+    <nav className="bg-background border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/admin" className="flex items-center gap-2">
@@ -99,7 +99,7 @@ export default function AdminNav({ profile }: AdminNavProps) {
                 </Avatar>
                 <div className="hidden flex-col items-start text-left text-sm md:flex">
                   <span className="font-medium">{profile.full_name}</span>
-                  <span className="text-xs text-muted-foreground">ผู้ดูแลหอพัก</span>
+                  <span className="text-muted-foreground text-xs">ผู้ดูแลหอพัก</span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -107,7 +107,7 @@ export default function AdminNav({ profile }: AdminNavProps) {
               <DropdownMenuLabel>
                 <div>
                   <p className="font-medium">{profile.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{profile.email}</p>
+                  <p className="text-muted-foreground text-xs">{profile.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -120,5 +120,5 @@ export default function AdminNav({ profile }: AdminNavProps) {
         </div>
       </div>
     </nav>
-  );
+  )
 }

@@ -1,55 +1,55 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, AlertCircle, CheckCircle2, FileText } from "lucide-react";
-import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
-import { statusConfig, categoryConfig } from "@/lib/constants";
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Clock, AlertCircle, CheckCircle2, FileText } from 'lucide-react'
+import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
+import { th } from 'date-fns/locale'
+import { statusConfig, categoryConfig } from '@/lib/constants'
 
 export default async function AdminDashboard() {
-  const supabase = await createServerSupabaseClient();
-  
+  const supabase = await createServerSupabaseClient()
+
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/auth/login");
+    redirect('/auth/login')
   }
 
   // ดึงข้อมูลสถิติ
   const { data: allTickets } = (await supabase
-    .from("tickets")
-    .select("*")
-    .order("created_at", { ascending: false })) as { data: any[] };
+    .from('tickets')
+    .select('*')
+    .order('created_at', { ascending: false })) as { data: any[] }
 
   const { data: recentTickets } = (await supabase
-    .from("tickets")
-    .select(`
+    .from('tickets')
+    .select(
+      `
       *,
       profiles:user_id (
         full_name,
         room_number
       )
-    `)
-    .order("created_at", { ascending: false })
-    .limit(10)) as { data: any[] };
+    `
+    )
+    .order('created_at', { ascending: false })
+    .limit(10)) as { data: any[] }
 
-  const totalTickets = allTickets?.length || 0;
-  const pendingCount = allTickets?.filter((t: any) => t.status === "pending").length || 0;
-  const inProgressCount = allTickets?.filter((t: any) => t.status === "in_progress").length || 0;
-  const completedCount = allTickets?.filter((t: any) => t.status === "completed").length || 0;
+  const totalTickets = allTickets?.length || 0
+  const pendingCount = allTickets?.filter((t: any) => t.status === 'pending').length || 0
+  const inProgressCount = allTickets?.filter((t: any) => t.status === 'in_progress').length || 0
+  const completedCount = allTickets?.filter((t: any) => t.status === 'completed').length || 0
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          ภาพรวมการแจ้งซ่อมทั้งหมดในระบบ
-        </p>
+        <p className="text-muted-foreground">ภาพรวมการแจ้งซ่อมทั้งหมดในระบบ</p>
       </div>
 
       {/* Stats Cards */}
@@ -57,11 +57,11 @@ export default async function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">รายการทั้งหมด</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <FileText className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalTickets}</div>
-            <p className="text-xs text-muted-foreground">รายการแจ้งซ่อมทั้งหมด</p>
+            <p className="text-muted-foreground text-xs">รายการแจ้งซ่อมทั้งหมด</p>
           </CardContent>
         </Card>
         <Card>
@@ -71,7 +71,7 @@ export default async function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingCount}</div>
-            <p className="text-xs text-muted-foreground">ต้องตรวจสอบ</p>
+            <p className="text-muted-foreground text-xs">ต้องตรวจสอบ</p>
           </CardContent>
         </Card>
         <Card>
@@ -81,7 +81,7 @@ export default async function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{inProgressCount}</div>
-            <p className="text-xs text-muted-foreground">กำลังซ่อม</p>
+            <p className="text-muted-foreground text-xs">กำลังซ่อม</p>
           </CardContent>
         </Card>
         <Card>
@@ -91,7 +91,7 @@ export default async function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{completedCount}</div>
-            <p className="text-xs text-muted-foreground">ซ่อมเสร็จแล้ว</p>
+            <p className="text-muted-foreground text-xs">ซ่อมเสร็จแล้ว</p>
           </CardContent>
         </Card>
       </div>
@@ -105,9 +105,7 @@ export default async function AdminDashboard() {
               <CardDescription>รายการ 10 รายการล่าสุดที่แจ้งเข้ามา</CardDescription>
             </div>
             <Link href="/admin/tickets">
-              <Badge className="cursor-pointer hover:bg-primary/90">
-                ดูทั้งหมด
-              </Badge>
+              <Badge className="hover:bg-primary/90 cursor-pointer">ดูทั้งหมด</Badge>
             </Link>
           </div>
         </CardHeader>
@@ -115,16 +113,12 @@ export default async function AdminDashboard() {
           {recentTickets && recentTickets.length > 0 ? (
             <div className="space-y-4">
               {recentTickets.map((ticket) => {
-                const status = statusConfig[ticket.status as keyof typeof statusConfig];
-                const StatusIcon = status.icon;
-                
+                const status = statusConfig[ticket.status as keyof typeof statusConfig]
+                const StatusIcon = status.icon
+
                 return (
-                  <Link
-                    key={ticket.id}
-                    href={`/admin/tickets/${ticket.id}`}
-                    className="block"
-                  >
-                    <div className="flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
+                  <Link key={ticket.id} href={`/admin/tickets/${ticket.id}`} className="block">
+                    <div className="hover:bg-muted/50 flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors">
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                           <h3 className="font-medium">{ticket.title}</h3>
@@ -132,13 +126,11 @@ export default async function AdminDashboard() {
                             {categoryConfig[ticket.category as keyof typeof categoryConfig]}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-1">
+                        <p className="text-muted-foreground line-clamp-1 text-sm">
                           {ticket.description}
                         </p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>
-                            {ticket.profiles?.full_name || "Unknown"}
-                          </span>
+                        <div className="text-muted-foreground flex items-center gap-4 text-xs">
+                          <span>{ticket.profiles?.full_name || 'Unknown'}</span>
                           <span>ห้อง {ticket.room_number}</span>
                           <span>
                             {formatDistanceToNow(new Date(ticket.created_at), {
@@ -154,16 +146,14 @@ export default async function AdminDashboard() {
                       </Badge>
                     </div>
                   </Link>
-                );
+                )
               })}
             </div>
           ) : (
-            <div className="py-12 text-center text-muted-foreground">
-              ยังไม่มีรายการแจ้งซ่อม
-            </div>
+            <div className="text-muted-foreground py-12 text-center">ยังไม่มีรายการแจ้งซ่อม</div>
           )}
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

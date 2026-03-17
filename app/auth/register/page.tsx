@@ -1,49 +1,56 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/client";
-import { Wrench } from "lucide-react";
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { createClient } from '@/lib/supabase/client'
+import { Wrench } from 'lucide-react'
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const router = useRouter()
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    fullName: "",
-    roomNumber: "",
-    phone: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: '',
+    roomNumber: '',
+    phone: '',
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+    e.preventDefault()
+    setLoading(true)
+    setError('')
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError("รหัสผ่านไม่ตรงกัน");
-      setLoading(false);
-      return;
+      setError('รหัสผ่านไม่ตรงกัน')
+      setLoading(false)
+      return
     }
 
     if (formData.password.length < 6) {
-      setError("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
-      setLoading(false);
-      return;
+      setError('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร')
+      setLoading(false)
+      return
     }
 
     try {
-      const supabase = createClient();
-      
+      const supabase = createClient()
+
       // สมัครสมาชิก
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
@@ -51,53 +58,51 @@ export default function RegisterPage() {
         options: {
           data: {
             full_name: formData.fullName,
-            role: "resident",
+            role: 'resident',
           },
         },
-      });
+      })
 
-      if (signUpError) throw signUpError;
+      if (signUpError) throw signUpError
 
       if (data.user) {
         // อัปเดตข้อมูล profile เพิ่มเติม
         const { error: updateError } = await supabase
-          .from("profiles")
+          .from('profiles')
           // @ts-expect-error - Supabase type issue
           .update({
             room_number: formData.roomNumber,
             phone: formData.phone,
           })
-          .eq("id", data.user.id);
+          .eq('id', data.user.id)
 
-        if (updateError) throw updateError;
+        if (updateError) throw updateError
 
-        router.push("/resident");
-        router.refresh();
+        router.push('/resident')
+        router.refresh()
       }
     } catch (error: any) {
-      setError(error.message || "สมัครสมาชิกไม่สำเร็จ");
+      setError(error.message || 'สมัครสมาชิกไม่สำเร็จ')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-r from-primary/15 to-primary/5">
+    <div className="from-primary/15 to-primary/5 flex min-h-screen items-center justify-center bg-linear-to-r">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary">
-            <Wrench className="h-6 w-6 text-primary-foreground" />
+          <div className="bg-primary mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
+            <Wrench className="text-primary-foreground h-6 w-6" />
           </div>
           <CardTitle className="text-2xl font-bold">สมัครสมาชิก</CardTitle>
-          <CardDescription>
-            สร้างบัญชีใหม่เพื่อเริ่มใช้งาน Fixit
-          </CardDescription>
+          <CardDescription>สร้างบัญชีใหม่เพื่อเริ่มใช้งาน Fixit</CardDescription>
         </CardHeader>
         <form onSubmit={handleRegister}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error} 
+              <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
+                {error}
               </div>
             )}
             <div className="space-y-2">
@@ -165,13 +170,13 @@ export default function RegisterPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4 mt-4">
+          <CardFooter className="mt-4 flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "กำลังสมัครสมาชิก..." : "สมัครสมาชิก"}
+              {loading ? 'กำลังสมัครสมาชิก...' : 'สมัครสมาชิก'}
             </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              มีบัญชีอยู่แล้ว?{" "}
-              <Link href="/auth/login" className="font-medium text-primary hover:underline">
+            <p className="text-muted-foreground text-center text-sm">
+              มีบัญชีอยู่แล้ว?{' '}
+              <Link href="/auth/login" className="text-primary font-medium hover:underline">
                 เข้าสู่ระบบ
               </Link>
             </p>
@@ -179,5 +184,5 @@ export default function RegisterPage() {
         </form>
       </Card>
     </div>
-  );
+  )
 }

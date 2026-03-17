@@ -1,12 +1,12 @@
-"use client";
+'use client'
 
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/ui/mode-toggle";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { ModeToggle } from '@/components/ui/mode-toggle'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,37 +14,37 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Home, FileText, LogOut } from "lucide-react";
+} from '@/components/ui/dropdown-menu'
+import { Home, FileText, LogOut } from 'lucide-react'
 interface ResidentNavProps {
   profile: {
-    full_name: string;
-    email: string;
-    room_number: string | null;
-  };
+    full_name: string
+    email: string
+    room_number: string | null
+  }
 }
 
 export default function ResidentNav({ profile }: ResidentNavProps) {
-  const router = useRouter();
+  const router = useRouter()
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
-  };
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
 
   const getInitials = (name: string) => {
     return name
-      .split(" ")
+      .split(' ')
       .map((n) => n[0])
-      .join("")
+      .join('')
       .toUpperCase()
-      .slice(0, 2);
-  };
+      .slice(0, 2)
+  }
 
   return (
-    <nav className="border-b bg-background shadow-2sm">
+    <nav className="bg-background shadow-2sm border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/resident" className="flex items-center gap-2">
@@ -94,7 +94,7 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
                 <div className="hidden flex-col items-start text-left text-sm md:flex">
                   <span className="font-medium">{profile.full_name}</span>
                   {profile.room_number && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       ห้อง {profile.room_number}
                     </span>
                   )}
@@ -105,7 +105,7 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
               <DropdownMenuLabel>
                 <div>
                   <p className="font-medium">{profile.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{profile.email}</p>
+                  <p className="text-muted-foreground text-xs">{profile.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -118,5 +118,5 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
         </div>
       </div>
     </nav>
-  );
+  )
 }

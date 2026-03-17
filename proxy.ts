@@ -43,7 +43,7 @@ export async function proxy(request: NextRequest) {
   // ถ้ามี user และเข้าหน้า auth ให้ redirect ไป dashboard
   if (user && request.nextUrl.pathname.startsWith('/auth')) {
     const url = request.nextUrl.clone()
-    
+
     // ตรวจสอบ role
     const { data: profile } = await supabase
       .from('profiles')
@@ -63,7 +63,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }
