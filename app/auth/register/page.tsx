@@ -69,7 +69,6 @@ export default function RegisterPage() {
         // อัปเดตข้อมูล profile เพิ่มเติม
         const { error: updateError } = await supabase
           .from('profiles')
-          // @ts-expect-error - Supabase type issue
           .update({
             room_number: formData.roomNumber,
             phone: formData.phone,
