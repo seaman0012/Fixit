@@ -10,21 +10,11 @@ import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { Send, Loader2 } from 'lucide-react'
-
-interface Comment {
-  id: string
-  message: string
-  created_at: string
-  user_id: string
-  profiles: {
-    full_name: string
-    role: string
-  } | null
-}
+import type { CommentWithProfile } from '@/types'
 
 interface CommentSectionProps {
   ticketId: string
-  initialComments: Comment[]
+  initialComments: CommentWithProfile[]
   /**
    * User role: 'admin' or 'resident'
    * Used to customize the description text
@@ -37,7 +27,7 @@ export default function CommentSection({
   initialComments,
   userRole = 'resident',
 }: CommentSectionProps) {
-  const [comments, setComments] = useState<Comment[]>(initialComments)
+  const [comments, setComments] = useState<CommentWithProfile[]>(initialComments)
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
@@ -77,10 +67,20 @@ export default function CommentSection({
 
           if (newComment) {
             // ตรวจสอบว่ามี comment นี้อยู่แล้วหรือไม่ (เพื่อป้องกัน duplicate จาก optimistic update)
+            // Ensure created_at is a string for serialization
+            const serializedComment: CommentWithProfile = {
+              ...newComment,
+              created_at:
+                typeof newComment.created_at === 'string'
+                  ? newComment.created_at
+                  : newComment.created_at
+                    ? new Date(newComment.created_at).toISOString()
+                    : new Date().toISOString(),
+            }
             setComments((prev) => {
-              const exists = prev.some((c) => c.id === newComment.id)
+              const exists = prev.some((c) => c.id === serializedComment.id)
               if (exists) return prev
-              return [...prev, newComment]
+              return [...prev, serializedComment]
             })
           }
         }
@@ -129,7 +129,16 @@ export default function CommentSection({
 
       // อัปเดต UI ทันทีด้วย optimistic update
       if (insertedComment) {
-        setComments((prev) => [...prev, insertedComment as Comment])
+        const serializedComment: CommentWithProfile = {
+          ...insertedComment,
+          created_at:
+            typeof insertedComment.created_at === 'string'
+              ? insertedComment.created_at
+              : insertedComment.created_at
+                ? new Date(insertedComment.created_at).toISOString()
+                : new Date().toISOString(),
+        }
+        setComments((prev) => [...prev, serializedComment])
       }
 
       setNewComment('')
@@ -184,7 +193,7 @@ export default function CommentSection({
                       </Badge>
                     )}
                     <span className="text-muted-foreground text-xs">
-                      {formatDistanceToNow(new Date(comment.created_at), {
+                      {formatDistanceToNow(new Date(comment.created_at!), {
                         addSuffix: true,
                         locale: th,
                       })}
