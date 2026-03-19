@@ -56,7 +56,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   // ดึงข้อมูล ticket

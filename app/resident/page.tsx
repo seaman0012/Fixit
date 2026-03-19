@@ -17,7 +17,7 @@ export default async function ResidentPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   // ดึงข้อมูล tickets ของ user

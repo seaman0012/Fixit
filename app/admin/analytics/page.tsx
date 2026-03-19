@@ -13,7 +13,7 @@ export default async function AnalyticsPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   // ดึงข้อมูล tickets ทั้งหมด

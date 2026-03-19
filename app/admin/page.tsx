@@ -16,7 +16,7 @@ export default async function AdminDashboard() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   // ดึงข้อมูลสถิติ

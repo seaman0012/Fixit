@@ -23,7 +23,7 @@ export default async function AdminTicketsPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   const statusFilter = status || 'all'
