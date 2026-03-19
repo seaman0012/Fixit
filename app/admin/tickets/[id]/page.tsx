@@ -61,7 +61,7 @@ export default async function AdminTicketDetailPage({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
 
   // ดึงข้อมูล ticket

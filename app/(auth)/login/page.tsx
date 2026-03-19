@@ -106,7 +106,7 @@ export default function LoginPage() {
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               ยังไม่มีบัญชี?{' '}
-              <Link href="/auth/register" className="text-primary font-medium hover:underline">
+              <Link href="/register" className="text-primary font-medium hover:underline">
                 สมัครสมาชิก
               </Link>
             </p>
