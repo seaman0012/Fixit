@@ -7,6 +7,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
+  // Disable public register route
+  if (request.nextUrl.pathname === '/register') {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -33,15 +38,17 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // ถ้าไม่มี user และเข้าหน้าที่ต้อง login ให้ redirect ไป login
-  if (!user && !request.nextUrl.pathname.startsWith('/auth')) {
+  const isAuthRoute = ['/login', '/register'].includes(request.nextUrl.pathname)
+
+  // ถ้าไม่มี user และเข้าหน้าที่ต้อง login ให้ redirect
+  if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // ถ้ามี user และเข้าหน้า auth ให้ redirect ไป dashboard
-  if (user && request.nextUrl.pathname.startsWith('/auth')) {
+  // ถ้ามี user และเข้าหน้า auth ให้ redirect
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
 
     // ตรวจสอบ role
