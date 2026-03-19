@@ -49,7 +49,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          avatar_url: string | null
           created_at: string | null
           email: string
           full_name: string
@@ -57,13 +56,9 @@ export type Database = {
           phone: string | null
           role: string
           room_number: string | null
-          room_verification_status: string
-          room_verified_at: string | null
-          room_verified_by: string | null
           updated_at: string | null
         }
         Insert: {
-          avatar_url?: string | null
           created_at?: string | null
           email: string
           full_name: string
@@ -71,13 +66,9 @@ export type Database = {
           phone?: string | null
           role: string
           room_number?: string | null
-          room_verification_status?: string
-          room_verified_at?: string | null
-          room_verified_by?: string | null
           updated_at?: string | null
         }
         Update: {
-          avatar_url?: string | null
           created_at?: string | null
           email?: string
           full_name?: string
@@ -85,20 +76,9 @@ export type Database = {
           phone?: string | null
           role?: string
           room_number?: string | null
-          room_verification_status?: string
-          room_verified_at?: string | null
-          room_verified_by?: string | null
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: 'profiles_room_verified_by_fkey'
-            columns: ['room_verified_by']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
-        ]
+        Relationships: []
       }
       ticket_history: {
         Row: {
@@ -106,7 +86,6 @@ export type Database = {
           created_at: string | null
           id: string
           new_status: string | null
-          notes: string | null
           old_status: string | null
           ticket_id: string
           user_id: string
@@ -116,7 +95,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           new_status?: string | null
-          notes?: string | null
           old_status?: string | null
           ticket_id: string
           user_id: string
@@ -126,7 +104,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           new_status?: string | null
-          notes?: string | null
           old_status?: string | null
           ticket_id?: string
           user_id?: string
@@ -150,7 +127,6 @@ export type Database = {
       }
       tickets: {
         Row: {
-          assigned_to: string | null
           category: string
           completed_at: string | null
           created_at: string | null
@@ -165,7 +141,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          assigned_to?: string | null
           category: string
           completed_at?: string | null
           created_at?: string | null
@@ -180,7 +155,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          assigned_to?: string | null
           category?: string
           completed_at?: string | null
           created_at?: string | null
@@ -195,13 +169,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: 'tickets_assigned_to_fkey'
-            columns: ['assigned_to']
-            isOneToOne: false
-            referencedRelation: 'profiles'
-            referencedColumns: ['id']
-          },
           {
             foreignKeyName: 'tickets_user_id_fkey'
             columns: ['user_id']
