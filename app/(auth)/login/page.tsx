@@ -39,12 +39,11 @@ export default function LoginPage() {
       if (error) throw error
 
       if (data.user) {
-        // ตรวจสอบ role
-        const { data: profile } = (await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)
-          .single()) as { data: any }
+          .single()
 
         if (profile?.role === 'admin') {
           router.push('/admin')
@@ -63,7 +62,7 @@ export default function LoginPage() {
   return (
     <div className="from-primary/10 to-background flex min-h-screen items-center justify-center bg-linear-to-b p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
+        <CardHeader className="bg space-y-1 text-center">
           <div className="bg-primary mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
             <Wrench className="text-primary-foreground h-6 w-6" />
           </div>
@@ -100,14 +99,14 @@ export default function LoginPage() {
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
+          <CardFooter className="mt-4 flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               ยังไม่มีบัญชี?{' '}
               <Link href="/register" className="text-primary font-medium hover:underline">
-                สมัครสมาชิก
+                ติดต่อแอดมิน
               </Link>
             </p>
           </CardFooter>
