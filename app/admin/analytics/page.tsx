@@ -1,5 +1,4 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import AnalyticsCharts from '@/components/admin/analytics-charts'
@@ -7,14 +6,6 @@ import { categoryConfig } from '@/lib/constants'
 
 export default async function AnalyticsPage() {
   const supabase = await createServerSupabaseClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
 
   // ดึงข้อมูล tickets ทั้งหมด
   const { data: tickets } = (await supabase

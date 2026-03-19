@@ -1,5 +1,4 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Clock, AlertCircle, CheckCircle2, FileText } from 'lucide-react'
@@ -10,14 +9,6 @@ import { statusConfig, categoryConfig } from '@/lib/constants'
 
 export default async function AdminDashboard() {
   const supabase = await createServerSupabaseClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
 
   // ดึงข้อมูลสถิติ
   const { data: allTickets } = (await supabase
