@@ -10,7 +10,7 @@ import { th } from 'date-fns/locale'
 import Image from 'next/image'
 import CommentSection from '@/components/resident/comment-section'
 import StatusUpdateForm from '@/components/admin/status-update-form'
-import { statusConfig, categoryConfig, priorityConfig } from '@/lib/constants'
+import { statusConfig, categoryConfig } from '@/lib/constants'
 import type { AdminTicketWithProfile, CommentWithProfile } from '@/types'
 
 export async function generateMetadata({
@@ -103,7 +103,6 @@ export default async function AdminTicketDetailPage({
 
   const status = statusConfig[ticket.status as keyof typeof statusConfig]
   const StatusIcon = status.icon
-  const priority = priorityConfig[ticket.priority as keyof typeof priorityConfig]
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -233,14 +232,6 @@ export default async function AdminTicketDetailPage({
               </div>
 
               <Separator />
-
-              <div className="flex items-center gap-3">
-                <Clock className="text-muted-foreground h-4 w-4" />
-                <div>
-                  <p className="text-sm font-medium">ความเร่งด่วน</p>
-                  <Badge className={`mt-1 ${priority.color}`}>{priority.label}</Badge>
-                </div>
-              </div>
 
               {ticket.completed_at && (
                 <>
