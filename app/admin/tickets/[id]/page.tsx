@@ -56,14 +56,6 @@ export default async function AdminTicketDetailPage({
   const { id } = await params
   const supabase = await createServerSupabaseClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/auth/login')
-  }
-
   // ดึงข้อมูล ticket
   const { data: ticket, error } = (await supabase
     .from('tickets')

@@ -14,10 +14,10 @@ export default function Home() {
             <h1 className="text-xl font-bold">Fixit</h1>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/auth/login">
+            <Link href="/login">
               <Button variant="ghost">เข้าสู่ระบบ</Button>
             </Link>
-            <Link href="/auth/register">
+            <Link href="/register">
               <Button>สมัครสมาชิก</Button>
             </Link>
           </div>
@@ -36,12 +36,12 @@ export default function Home() {
               แจ้งปัญหาและติดตามสถานะการซ่อมได้แบบ Real-time ง่าย รวดเร็ว และมีประสิทธิภาพ
             </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Link href="/auth/register">
+              <Link href="/register">
                 <Button size="lg" className="w-full sm:w-auto">
                   เริ่มต้นใช้งาน
                 </Button>
               </Link>
-              <Link href="/auth/login">
+              <Link href="/login">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
                   เข้าสู่ระบบ
                 </Button>
