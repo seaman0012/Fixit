@@ -1,69 +1,115 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { redirect, notFound } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Clock, AlertCircle, CheckCircle2, MapPin, Calendar, User } from "lucide-react";
-import { format } from "date-fns";
-import { th } from "date-fns/locale";
-import Image from "next/image";
-import CommentSection from "@/components/resident/comment-section";
-import { statusConfig, categoryConfig, priorityConfig } from "@/lib/constants";
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { redirect, notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Clock, AlertCircle, CheckCircle2, MapPin, Calendar, User } from 'lucide-react'
+import { format } from 'date-fns'
+import { th } from 'date-fns/locale'
+import Image from 'next/image'
+import CommentSection from '@/components/resident/comment-section'
+import { statusConfig, categoryConfig, priorityConfig } from '@/lib/constants'
+import type { TicketWithProfile, CommentWithProfile } from '@/types'
 
-export default async function TicketDetailPage({
+export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const supabase = await createServerSupabaseClient();
-  
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createServerSupabaseClient()
+
+  const { data: ticket } = (await supabase
+    .from('tickets')
+    .select('title, description, status')
+    .eq('id', id)
+    .single()) as { data: any; error: any }
+
+  if (!ticket) {
+    return {
+      title: 'ไม่พบรายการ',
+    }
+  }
+
+  const statusLabel =
+    statusConfig[ticket.status as keyof typeof statusConfig]?.label || ticket.status
+
+  return {
+    title: `${ticket.title} - Fixit`,
+    description: `${ticket.description?.substring(0, 150)}... | สถานะ: ${statusLabel}`,
+    openGraph: {
+      title: ticket.title,
+      description: ticket.description?.substring(0, 150),
+      type: 'article',
+      siteName: 'Fixit',
+    },
+  }
+}
+
+export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createServerSupabaseClient()
+
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/auth/login");
+    redirect('/login')
   }
 
   // ดึงข้อมูล ticket
-  const { data: ticket, error } = await supabase
-    .from("tickets")
-    .select(`
+  const { data: ticket, error } = (await supabase
+    .from('tickets')
+    .select(
+      `
       *,
       profiles:user_id (
         full_name,
         email
       )
-    `)
-    .eq("id", id)
-    .single() as { data: any; error: any };
+    `
+    )
+    .eq('id', id)
+    .single()) as { data: TicketWithProfile; error: any }
 
   if (error || !ticket) {
-    notFound();
+    notFound()
   }
 
   // ตรวจสอบว่าเป็นเจ้าของ ticket หรือไม่
-  if ((ticket as any).user_id !== user.id) {
-    redirect("/resident");
+  if (ticket.user_id !== user.id) {
+    redirect('/resident')
   }
 
   // ดึงข้อมูล comments
-  const { data: comments } = await supabase
-    .from("comments")
-    .select(`
+  const { data: commentsRaw } = await supabase
+    .from('comments')
+    .select(
+      `
       *,
       profiles (
         full_name,
         role
       )
-    `)
-    .eq("ticket_id", id)
-    .order("created_at", { ascending: true });
+    `
+    )
+    .eq('ticket_id', id)
+    .order('created_at', { ascending: true })
 
-  const status = statusConfig[(ticket as any).status as keyof typeof statusConfig];
-  const StatusIcon = status.icon;
-  const priority = priorityConfig[(ticket as any).priority as keyof typeof priorityConfig];
+  // Serialize comments to ensure created_at is a string (not Date object)
+  const comments = (commentsRaw || []).map((comment: any) => ({
+    ...comment,
+    created_at:
+      typeof comment.created_at === 'string'
+        ? comment.created_at
+        : new Date(comment.created_at).toISOString(),
+  })) as CommentWithProfile[]
+
+  const status = statusConfig[ticket.status as keyof typeof statusConfig]
+  const StatusIcon = status.icon
+  const priority = priorityConfig[ticket.priority as keyof typeof priorityConfig]
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -83,7 +129,10 @@ export default async function TicketDetailPage({
                 <div>
                   <CardTitle>รายละเอียด</CardTitle>
                   <CardDescription>
-                    สร้างเมื่อ {format(new Date((ticket as any).created_at), "d MMMM yyyy, HH:mm น.", { locale: th })}
+                    สร้างเมื่อ{' '}
+                    {format(new Date(ticket.created_at!), 'd MMMM yyyy, HH:mm น.', {
+                      locale: th,
+                    })}
                   </CardDescription>
                 </div>
                 <Badge className={status.color}>
@@ -95,16 +144,14 @@ export default async function TicketDetailPage({
             <CardContent className="space-y-4">
               <div>
                 <h3 className="mb-2 font-medium">คำอธิบาย</h3>
-                <p className="whitespace-pre-wrap text-muted-foreground">
-                  {(ticket as any).description}
-                </p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{ticket.description}</p>
               </div>
 
-              {(ticket as any).image_urls && (ticket as any).image_urls.length > 0 && (
+              {ticket.image_urls && ticket.image_urls.length > 0 && (
                 <div>
                   <h3 className="mb-2 font-medium">รูปภาพประกอบ</h3>
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                    {(ticket as any).image_urls.map((url: string, index: number) => (
+                    {ticket.image_urls.map((url: string, index: number) => (
                       <a
                         key={index}
                         href={url}
@@ -116,6 +163,7 @@ export default async function TicketDetailPage({
                           src={url}
                           alt={`Image ${index + 1}`}
                           fill
+                          sizes="(max-width: 768px) 50vw, 33vw"
                           className="object-cover transition-transform hover:scale-105"
                         />
                       </a>
@@ -127,7 +175,7 @@ export default async function TicketDetailPage({
           </Card>
 
           {/* Comments */}
-          <CommentSection ticketId={id} initialComments={comments || []} />
+          <CommentSection ticketId={id} initialComments={comments} />
         </div>
 
         {/* Sidebar */}
@@ -139,20 +187,20 @@ export default async function TicketDetailPage({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <MapPin className="text-muted-foreground h-4 w-4" />
                 <div>
                   <p className="text-sm font-medium">หมายเลขห้อง</p>
-                  <p className="text-sm text-muted-foreground">{(ticket as any).room_number}</p>
+                  <p className="text-muted-foreground text-sm">{(ticket as any).room_number}</p>
                 </div>
               </div>
 
               <Separator />
 
               <div className="flex items-center gap-3">
-                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                <AlertCircle className="text-muted-foreground h-4 w-4" />
                 <div>
                   <p className="text-sm font-medium">ประเภท</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {categoryConfig[(ticket as any).category as keyof typeof categoryConfig]}
                   </p>
                 </div>
@@ -161,7 +209,7 @@ export default async function TicketDetailPage({
               <Separator />
 
               <div className="flex items-center gap-3">
-                <Clock className="h-4 w-4 text-muted-foreground" />
+                <Clock className="text-muted-foreground h-4 w-4" />
                 <div>
                   <p className="text-sm font-medium">ความเร่งด่วน</p>
                   <Badge className={`mt-1 ${priority.color}`}>{priority.label}</Badge>
@@ -172,11 +220,13 @@ export default async function TicketDetailPage({
                 <>
                   <Separator />
                   <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                    <CheckCircle2 className="text-muted-foreground h-4 w-4" />
                     <div>
                       <p className="text-sm font-medium">เสร็จสิ้นเมื่อ</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(ticket.completed_at), "d MMMM yyyy, HH:mm น.", { locale: th })}
+                      <p className="text-muted-foreground text-sm">
+                        {format(new Date(ticket.completed_at), 'd MMMM yyyy, HH:mm น.', {
+                          locale: th,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -193,33 +243,31 @@ export default async function TicketDetailPage({
             <CardContent className="space-y-4">
               <div className="flex gap-3">
                 <div className="flex flex-col items-center">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-                    <Calendar className="h-4 w-4 text-primary-foreground" />
+                  <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-full">
+                    <Calendar className="text-primary-foreground h-4 w-4" />
                   </div>
-                  <div className="w-px flex-1 bg-border" />
+                  <div className="bg-border w-px flex-1" />
                 </div>
                 <div className="pb-4">
                   <p className="text-sm font-medium">สร้างรายการ</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(ticket.created_at), "d MMM yyyy, HH:mm", { locale: th })}
+                  <p className="text-muted-foreground text-xs">
+                    {format(new Date(ticket.created_at!), 'd MMM yyyy, HH:mm', { locale: th })}
                   </p>
                 </div>
               </div>
 
-              {ticket.status !== "pending" && (
+              {ticket.status !== 'pending' && (
                 <div className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500">
                       <AlertCircle className="h-4 w-4 text-white" />
                     </div>
-                    {ticket.status !== "in_progress" && (
-                      <div className="w-px flex-1 bg-border" />
-                    )}
+                    {ticket.status !== 'in_progress' && <div className="bg-border w-px flex-1" />}
                   </div>
-                  <div className={ticket.status === "in_progress" ? "" : "pb-4"}>
+                  <div className={ticket.status === 'in_progress' ? '' : 'pb-4'}>
                     <p className="text-sm font-medium">เริ่มดำเนินการ</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(ticket.updated_at), "d MMM yyyy, HH:mm", { locale: th })}
+                    <p className="text-muted-foreground text-xs">
+                      {format(new Date(ticket.updated_at!), 'd MMM yyyy, HH:mm', { locale: th })}
                     </p>
                   </div>
                 </div>
@@ -232,8 +280,8 @@ export default async function TicketDetailPage({
                   </div>
                   <div>
                     <p className="text-sm font-medium">เสร็จสิ้น</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(ticket.completed_at), "d MMM yyyy, HH:mm", { locale: th })}
+                    <p className="text-muted-foreground text-xs">
+                      {format(new Date(ticket.completed_at), 'd MMM yyyy, HH:mm', { locale: th })}
                     </p>
                   </div>
                 </div>
@@ -243,5 +291,5 @@ export default async function TicketDetailPage({
         </div>
       </div>
     </div>
-  );
+  )
 }

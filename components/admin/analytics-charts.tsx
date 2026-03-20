@@ -1,17 +1,29 @@
-"use client";
+'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 
 interface AnalyticsChartsProps {
-  categoryStats: { category: string; count: number }[];
-  statusStats: { status: string; count: number }[];
+  categoryStats: { category: string; count: number }[]
+  statusStats: { status: string; count: number }[]
 }
 
 const COLORS = {
-  category: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"],
-  status: ["#eab308", "#3b82f6", "#10b981", "#6b7280"],
-};
+  category: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+  status: ['#eab308', '#3b82f6', '#10b981', '#6b7280'],
+}
 
 export default function AnalyticsCharts({ categoryStats, statusStats }: AnalyticsChartsProps) {
   return (
@@ -22,7 +34,7 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
           <CardTitle>สถิติตามประเภทอุปกรณ์</CardTitle>
           <CardDescription>จำนวนการแจ้งซ่อมแบ่งตามประเภท</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px]">
+        <CardContent className="h-75">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={categoryStats}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -31,7 +43,10 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
               <Tooltip />
               <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]}>
                 {categoryStats.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS.category[index % COLORS.category.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS.category[index % COLORS.category.length]}
+                  />
                 ))}
               </Bar>
             </BarChart>
@@ -45,7 +60,7 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
           <CardTitle>สถิติตามสถานะ</CardTitle>
           <CardDescription>สัดส่วนของรายการตามสถานะปัจจุบัน</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px]">
+        <CardContent className="h-75">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -54,7 +69,7 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
                 cy="50%"
                 labelLine={false}
                 label={({ payload, percent }: any) =>
-                  percent && percent > 0 ? `${payload.status}: ${(percent * 100).toFixed(0)}%` : ""
+                  percent && percent > 0 ? `${payload.status}: ${(percent * 100).toFixed(0)}%` : ''
                 }
                 outerRadius={80}
                 fill="#8884d8"
@@ -70,5 +85,5 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

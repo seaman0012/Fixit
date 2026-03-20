@@ -1,67 +1,59 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
-import { Clock, AlertCircle, CheckCircle2, Filter } from "lucide-react";
-import { statusConfig, categoryConfig } from "@/lib/constants";
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
+import { th } from 'date-fns/locale'
+import { Clock, AlertCircle, CheckCircle2, Filter } from 'lucide-react'
+import { statusConfig, categoryConfig } from '@/lib/constants'
 
 export default async function TicketsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string }>
 }) {
-  const { status } = await searchParams;
-  const supabase = await createServerSupabaseClient();
-  
+  const { status } = await searchParams
+  const supabase = await createServerSupabaseClient()
+
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/auth/login");
+    redirect('/login')
   }
 
-  const statusFilter = status || "all";
+  const statusFilter = status || 'all'
 
   // ดึงข้อมูล tickets
   let query = supabase
-    .from("tickets")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .from('tickets')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
 
-  if (statusFilter !== "all") {
-    query = query.eq("status", statusFilter);
+  if (statusFilter !== 'all') {
+    query = query.eq('status', statusFilter)
   }
 
-  const { data: tickets } = await query;
+  const { data: tickets } = await query
 
   const renderTickets = (filteredTickets: typeof tickets) => {
     if (!filteredTickets || filteredTickets.length === 0) {
-      return (
-        <div className="py-12 text-center text-muted-foreground">
-          ไม่พบรายการแจ้งซ่อม
-        </div>
-      );
+      return <div className="text-muted-foreground py-12 text-center">ไม่พบรายการแจ้งซ่อม</div>
     }
 
     return (
       <div className="space-y-4">
         {filteredTickets.map((ticket: any) => {
-          const status = statusConfig[ticket.status as keyof typeof statusConfig];
-          const StatusIcon = status.icon;
-          
+          const status = statusConfig[ticket.status as keyof typeof statusConfig]
+          const StatusIcon = status.icon
+
           return (
-            <Link
-              key={ticket.id}
-              href={`/resident/tickets/${ticket.id}`}
-              className="block"
-            >
-              <div className="flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
+            <Link key={ticket.id} href={`/resident/tickets/${ticket.id}`} className="block">
+              <div className="hover:bg-muted/50 flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors">
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium">{ticket.title}</h3>
@@ -69,10 +61,8 @@ export default async function TicketsPage({
                       {categoryConfig[ticket.category as keyof typeof categoryConfig]}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {ticket.description}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground line-clamp-2 text-sm">{ticket.description}</p>
+                  <p className="text-muted-foreground text-xs">
                     {formatDistanceToNow(new Date(ticket.created_at), {
                       addSuffix: true,
                       locale: th,
@@ -84,17 +74,15 @@ export default async function TicketsPage({
                     <StatusIcon className="mr-1 h-3 w-3" />
                     {status.label}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    ห้อง {ticket.room_number}
-                  </span>
+                  <span className="text-muted-foreground text-xs">ห้อง {ticket.room_number}</span>
                 </div>
               </div>
             </Link>
-          );
+          )
         })}
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -106,9 +94,7 @@ export default async function TicketsPage({
       <Card>
         <CardHeader>
           <CardTitle>รายการของฉัน</CardTitle>
-          <CardDescription>
-            ติดตามสถานะและดูรายละเอียดการแจ้งซ่อมของคุณ
-          </CardDescription>
+          <CardDescription>ติดตามสถานะและดูรายละเอียดการแจ้งซ่อมของคุณ</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={statusFilter} className="w-full">
@@ -136,5 +122,5 @@ export default async function TicketsPage({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

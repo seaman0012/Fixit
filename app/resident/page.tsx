@@ -1,37 +1,37 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { Plus, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
-import { statusConfig, categoryConfig } from "@/lib/constants";
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
+import { Plus, Clock, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
+import { th } from 'date-fns/locale'
+import { statusConfig, categoryConfig } from '@/lib/constants'
 
 export default async function ResidentPage() {
-  const supabase = await createServerSupabaseClient();
-  
+  const supabase = await createServerSupabaseClient()
+
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/auth/login");
+    redirect('/login')
   }
 
   // ดึงข้อมูล tickets ของ user
   const { data: tickets } = await supabase
-    .from("tickets")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(5);
+    .from('tickets')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(5)
 
   // นับจำนวนตามสถานะ
-  const pendingCount = tickets?.filter((t: any) => t.status === "pending").length || 0;
-  const inProgressCount = tickets?.filter((t: any) => t.status === "in_progress").length || 0;
-  const completedCount = tickets?.filter((t: any) => t.status === "completed").length || 0;
+  const pendingCount = tickets?.filter((t: any) => t.status === 'pending').length || 0
+  const inProgressCount = tickets?.filter((t: any) => t.status === 'in_progress').length || 0
+  const completedCount = tickets?.filter((t: any) => t.status === 'completed').length || 0
 
   return (
     <div className="space-y-6">
@@ -39,9 +39,7 @@ export default async function ResidentPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">หน้าหลัก</h1>
-          <p className="text-muted-foreground">
-            ยินดีต้อนรับสู่ระบบแจ้งซ่อม Fixit
-          </p>
+          <p className="text-muted-foreground">ยินดีต้อนรับสู่ระบบแจ้งซ่อม Fixit</p>
         </div>
         <Link href="/resident/tickets/new">
           <Button size="lg">
@@ -60,7 +58,7 @@ export default async function ResidentPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingCount}</div>
-            <p className="text-xs text-muted-foreground">รายการที่รอการตรวจสอบ</p>
+            <p className="text-muted-foreground text-xs">รายการที่รอการตรวจสอบ</p>
           </CardContent>
         </Card>
         <Card>
@@ -70,7 +68,7 @@ export default async function ResidentPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{inProgressCount}</div>
-            <p className="text-xs text-muted-foreground">รายการที่กำลังซ่อม</p>
+            <p className="text-muted-foreground text-xs">รายการที่กำลังซ่อม</p>
           </CardContent>
         </Card>
         <Card>
@@ -80,7 +78,7 @@ export default async function ResidentPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{completedCount}</div>
-            <p className="text-xs text-muted-foreground">รายการที่ซ่อมเสร็จแล้ว</p>
+            <p className="text-muted-foreground text-xs">รายการที่ซ่อมเสร็จแล้ว</p>
           </CardContent>
         </Card>
       </div>
@@ -104,16 +102,12 @@ export default async function ResidentPage() {
           {tickets && tickets.length > 0 ? (
             <div className="space-y-4">
               {tickets.map((ticket: any) => {
-                const status = statusConfig[ticket.status as keyof typeof statusConfig];
-                const StatusIcon = status.icon;
-                
+                const status = statusConfig[ticket.status as keyof typeof statusConfig]
+                const StatusIcon = status.icon
+
                 return (
-                  <Link
-                    key={ticket.id}
-                    href={`/resident/tickets/${ticket.id}`}
-                    className="block"
-                  >
-                    <div className="flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
+                  <Link key={ticket.id} href={`/resident/tickets/${ticket.id}`} className="block">
+                    <div className="hover:bg-muted/50 flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors">
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                           <h3 className="font-medium">{ticket.title}</h3>
@@ -121,10 +115,10 @@ export default async function ResidentPage() {
                             {categoryConfig[ticket.category as keyof typeof categoryConfig]}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-1">
+                        <p className="text-muted-foreground line-clamp-1 text-sm">
                           {ticket.description}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {formatDistanceToNow(new Date(ticket.created_at), {
                             addSuffix: true,
                             locale: th,
@@ -136,13 +130,13 @@ export default async function ResidentPage() {
                           <StatusIcon className="mr-1 h-3 w-3" />
                           {status.label}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           ห้อง {ticket.room_number}
                         </span>
                       </div>
                     </div>
                   </Link>
-                );
+                )
               })}
             </div>
           ) : (
@@ -159,5 +153,5 @@ export default async function ResidentPage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

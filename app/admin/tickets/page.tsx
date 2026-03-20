@@ -1,87 +1,72 @@
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import Link from "next/link";
-import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
-import { Clock, AlertCircle, CheckCircle2, Search } from "lucide-react";
-import { statusConfig, categoryConfig } from "@/lib/constants";
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
+import { th } from 'date-fns/locale'
+import { Clock, AlertCircle, CheckCircle2, Search } from 'lucide-react'
+import { statusConfig, categoryConfig } from '@/lib/constants'
 
 export default async function AdminTicketsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; search?: string }>;
+  searchParams: Promise<{ status?: string; search?: string }>
 }) {
-  const { status, search } = await searchParams;
-  const supabase = await createServerSupabaseClient();
-  
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { status, search } = await searchParams
+  const supabase = await createServerSupabaseClient()
 
-  if (!user) {
-    redirect("/auth/login");
-  }
-
-  const statusFilter = status || "all";
-  const searchQuery = search || "";
+  const statusFilter = status || 'all'
+  const searchQuery = search || ''
 
   // ดึงข้อมูล tickets
   let query = supabase
-    .from("tickets")
-    .select(`
+    .from('tickets')
+    .select(
+      `
       *,
       profiles:user_id (
         full_name,
         room_number,
         phone
       )
-    `)
-    .order("created_at", { ascending: false });
+    `
+    )
+    .order('created_at', { ascending: false })
 
-  if (statusFilter !== "all") {
-    query = query.eq("status", statusFilter);
+  if (statusFilter !== 'all') {
+    query = query.eq('status', statusFilter)
   }
 
-  const { data: tickets } = await query;
+  const { data: tickets } = await query
 
   // Filter by search query
   const filteredTickets = tickets?.filter((ticket: any) => {
-    if (!searchQuery) return true;
-    const search = searchQuery.toLowerCase();
+    if (!searchQuery) return true
+    const search = searchQuery.toLowerCase()
     return (
       ticket.title.toLowerCase().includes(search) ||
       ticket.description.toLowerCase().includes(search) ||
       ticket.room_number.toLowerCase().includes(search) ||
       ticket.profiles?.full_name?.toLowerCase().includes(search)
-    );
-  });
+    )
+  })
 
   const renderTickets = (ticketList: typeof tickets | undefined) => {
     if (!ticketList || ticketList.length === 0) {
-      return (
-        <div className="py-12 text-center text-muted-foreground">
-          ไม่พบรายการแจ้งซ่อม
-        </div>
-      );
+      return <div className="text-muted-foreground py-12 text-center">ไม่พบรายการแจ้งซ่อม</div>
     }
 
     return (
       <div className="space-y-4">
         {ticketList.map((ticket: any) => {
-          const status = statusConfig[ticket.status as keyof typeof statusConfig];
-          const StatusIcon = status.icon;
-          
+          const status = statusConfig[ticket.status as keyof typeof statusConfig]
+          const StatusIcon = status.icon
+
           return (
-            <Link
-              key={ticket.id}
-              href={`/admin/tickets/${ticket.id}`}
-              className="block"
-            >
-              <div className="flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors hover:bg-muted/50">
+            <Link key={ticket.id} href={`/admin/tickets/${ticket.id}`} className="block">
+              <div className="hover:bg-muted/50 flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors">
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium">{ticket.title}</h3>
@@ -89,17 +74,11 @@ export default async function AdminTicketsPage({
                       {categoryConfig[ticket.category as keyof typeof categoryConfig]}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {ticket.description}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>
-                      {ticket.profiles?.full_name || "Unknown"}
-                    </span>
+                  <p className="text-muted-foreground line-clamp-2 text-sm">{ticket.description}</p>
+                  <div className="text-muted-foreground flex items-center gap-4 text-xs">
+                    <span>{ticket.profiles?.full_name || 'Unknown'}</span>
                     <span>ห้อง {ticket.room_number}</span>
-                    {ticket.profiles?.phone && (
-                      <span>โทร: {ticket.profiles.phone}</span>
-                    )}
+                    {ticket.profiles?.phone && <span>โทร: {ticket.profiles.phone}</span>}
                     <span>
                       {formatDistanceToNow(new Date(ticket.created_at), {
                         addSuffix: true,
@@ -114,11 +93,11 @@ export default async function AdminTicketsPage({
                 </Badge>
               </div>
             </Link>
-          );
+          )
         })}
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -132,12 +111,10 @@ export default async function AdminTicketsPage({
           <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle>รายการแจ้งซ่อมทั้งหมด</CardTitle>
-              <CardDescription>
-                คลิกที่รายการเพื่ออัปเดตสถานะและให้ข้อมูลเพิ่มเติม
-              </CardDescription>
+              <CardDescription>คลิกที่รายการเพื่ออัปเดตสถานะและให้ข้อมูลเพิ่มเติม</CardDescription>
             </div>
             <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 type="search"
                 placeholder="ค้นหา..."
@@ -173,5 +150,5 @@ export default async function AdminTicketsPage({
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

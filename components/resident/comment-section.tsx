@@ -1,153 +1,167 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
-import { Send, Loader2 } from "lucide-react";
-
-interface Comment {
-  id: string;
-  message: string;
-  created_at: string;
-  user_id: string;
-  profiles: {
-    full_name: string;
-    role: string;
-  } | null;
-}
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { formatDistanceToNow } from 'date-fns'
+import { th } from 'date-fns/locale'
+import { Send, Loader2 } from 'lucide-react'
+import type { CommentWithProfile } from '@/types'
 
 interface CommentSectionProps {
-  ticketId: string;
-  initialComments: Comment[];
+  ticketId: string
+  initialComments: CommentWithProfile[]
   /**
    * User role: 'admin' or 'resident'
    * Used to customize the description text
    */
-  userRole?: "admin" | "resident";
+  userRole?: 'admin' | 'resident'
 }
 
-export default function CommentSection({ 
-  ticketId, 
-  initialComments, 
-  userRole = "resident" 
+export default function CommentSection({
+  ticketId,
+  initialComments,
+  userRole = 'resident',
 }: CommentSectionProps) {
-  const [comments, setComments] = useState<Comment[]>(initialComments);
-  const [newComment, setNewComment] = useState("");
-  const [loading, setLoading] = useState(false);
-  const supabase = createClient();
+  const [comments, setComments] = useState<CommentWithProfile[]>(initialComments)
+  const [newComment, setNewComment] = useState('')
+  const [loading, setLoading] = useState(false)
+  const supabase = createClient()
 
   // Real-time subscription
   useEffect(() => {
     // Set initial comments
-    setComments(initialComments);
+    setComments(initialComments)
 
     const channel = supabase
       .channel(`comments:${ticketId}`)
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "INSERT",
-          schema: "public",
-          table: "comments",
+          event: 'INSERT',
+          schema: 'public',
+          table: 'comments',
           filter: `ticket_id=eq.${ticketId}`,
         },
         async (payload) => {
-          console.log("New comment received via Realtime:", payload);
-          
+          console.log('New comment received via Realtime:', payload)
+
           // Fetch the full comment with profile data
           const { data: newComment } = await supabase
-            .from("comments")
-            .select(`
+            .from('comments')
+            .select(
+              `
               *,
               profiles (
                 full_name,
                 role
               )
-            `)
-            .eq("id", payload.new.id)
-            .single();
+            `
+            )
+            .eq('id', payload.new.id)
+            .single()
 
           if (newComment) {
             // ตรวจสอบว่ามี comment นี้อยู่แล้วหรือไม่ (เพื่อป้องกัน duplicate จาก optimistic update)
+            // Ensure created_at is a string for serialization
+            const serializedComment: CommentWithProfile = {
+              ...newComment,
+              created_at:
+                typeof newComment.created_at === 'string'
+                  ? newComment.created_at
+                  : newComment.created_at
+                    ? new Date(newComment.created_at).toISOString()
+                    : new Date().toISOString(),
+            }
             setComments((prev) => {
-              const exists = prev.some((c) => c.id === newComment.id);
-              if (exists) return prev;
-              return [...prev, newComment];
-            });
+              const exists = prev.some((c) => c.id === serializedComment.id)
+              if (exists) return prev
+              return [...prev, serializedComment]
+            })
           }
         }
       )
       .subscribe((status) => {
-        console.log("Realtime subscription status:", status);
-      });
+        console.log('Realtime subscription status:', status)
+      })
 
     return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [ticketId, supabase, initialComments]);
+      supabase.removeChannel(channel)
+    }
+  }, [ticketId, supabase, initialComments])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
+    e.preventDefault()
+    if (!newComment.trim()) return
 
-    setLoading(true);
+    setLoading(true)
     try {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await supabase.auth.getUser()
 
-      if (!user) throw new Error("Not authenticated");
+      if (!user) throw new Error('Not authenticated')
 
       // Insert comment และดึงข้อมูลที่เพิ่งสร้างกลับมาพร้อม profile
       const { data: insertedComment, error } = await supabase
-        .from("comments")
+        .from('comments')
         .insert({
           ticket_id: ticketId,
           user_id: user.id,
           message: newComment.trim(),
         })
-        .select(`
+        .select(
+          `
           *,
           profiles (
             full_name,
             role
           )
-        `)
-        .single();
+        `
+        )
+        .single()
 
-      if (error) throw error;
+      if (error) throw error
 
       // อัปเดต UI ทันทีด้วย optimistic update
       if (insertedComment) {
-        setComments((prev) => [...prev, insertedComment as Comment]);
+        const serializedComment: CommentWithProfile = {
+          ...insertedComment,
+          created_at:
+            typeof insertedComment.created_at === 'string'
+              ? insertedComment.created_at
+              : insertedComment.created_at
+                ? new Date(insertedComment.created_at).toISOString()
+                : new Date().toISOString(),
+        }
+        setComments((prev) => [...prev, serializedComment])
       }
 
-      setNewComment("");
+      setNewComment('')
     } catch (error) {
-      console.error("Error posting comment:", error);
+      console.error('Error posting comment:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const getInitials = (name: string) => {
     return name
-      .split(" ")
+      .split(' ')
       .map((n) => n[0])
-      .join("")
+      .join('')
       .toUpperCase()
-      .slice(0, 2);
-  };
+      .slice(0, 2)
+  }
 
-  const description = userRole === "admin" 
-    ? "พูดคุยและให้ข้อมูลเพิ่มเติมกับผู้พักอาศัย"
-    : "พูดคุยและให้ข้อมูลเพิ่มเติมกับผู้ดูแลหอพัก";
+  const description =
+    userRole === 'admin'
+      ? 'พูดคุยและให้ข้อมูลเพิ่มเติมกับผู้พักอาศัย'
+      : 'พูดคุยและให้ข้อมูลเพิ่มเติมกับผู้ดูแลหอพัก'
 
   return (
     <Card>
@@ -159,35 +173,33 @@ export default function CommentSection({
         {/* Comments List */}
         <div className="space-y-4">
           {comments.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              ยังไม่มีความคิดเห็น
-            </p>
+            <p className="text-muted-foreground py-8 text-center text-sm">ยังไม่มีความคิดเห็น</p>
           ) : (
             comments.map((comment) => (
               <div key={comment.id} className="flex gap-3">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="text-xs">
-                    {comment.profiles ? getInitials(comment.profiles.full_name) : "?"}
+                    {comment.profiles ? getInitials(comment.profiles.full_name) : '?'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium">
-                      {comment.profiles?.full_name || "Unknown"}
+                      {comment.profiles?.full_name || 'Unknown'}
                     </p>
-                    {comment.profiles?.role === "admin" && (
+                    {comment.profiles?.role === 'admin' && (
                       <Badge variant="secondary" className="text-xs">
                         ผู้ดูแล
                       </Badge>
                     )}
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(comment.created_at), {
+                    <span className="text-muted-foreground text-xs">
+                      {formatDistanceToNow(new Date(comment.created_at!), {
                         addSuffix: true,
                         locale: th,
                       })}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  <p className="text-muted-foreground text-sm whitespace-pre-wrap">
                     {comment.message}
                   </p>
                 </div>
@@ -223,5 +235,5 @@ export default function CommentSection({
         </form>
       </CardContent>
     </Card>
-  );
+  )
 }
