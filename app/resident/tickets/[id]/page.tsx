@@ -85,7 +85,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
 
   // ดึงข้อมูล comments
   const { data: commentsRaw } = await supabase
-    .from('comments')
+    .from('ticket_comments')
     .select(
       `
       *,

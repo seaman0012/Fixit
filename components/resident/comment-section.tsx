@@ -44,7 +44,7 @@ export default function CommentSection({
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'comments',
+          table: 'ticket_comments',
           filter: `ticket_id=eq.${ticketId}`,
         },
         async (payload) => {
@@ -52,7 +52,7 @@ export default function CommentSection({
 
           // Fetch the full comment with profile data
           const { data: newComment } = await supabase
-            .from('comments')
+            .from('ticket_comments')
             .select(
               `
               *,
@@ -108,7 +108,7 @@ export default function CommentSection({
 
       // Insert comment และดึงข้อมูลที่เพิ่งสร้างกลับมาพร้อม profile
       const { data: insertedComment, error } = await supabase
-        .from('comments')
+        .from('ticket_comments')
         .insert({
           ticket_id: ticketId,
           user_id: user.id,

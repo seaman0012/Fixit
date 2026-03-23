@@ -79,7 +79,7 @@ export default async function AdminTicketDetailPage({
 
   // ดึงข้อมูล comments
   const { data: commentsRaw } = await supabase
-    .from('comments')
+    .from('ticket_comments')
     .select(
       `
       *,

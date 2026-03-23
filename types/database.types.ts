@@ -8,7 +8,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      comments: {
+      ticket_comments: {
         Row: {
           created_at: string | null
           id: string
@@ -32,14 +32,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'comments_ticket_id_fkey'
+            foreignKeyName: 'ticket_comments_ticket_id_fkey'
             columns: ['ticket_id']
             isOneToOne: false
             referencedRelation: 'tickets'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'comments_user_id_fkey'
+            foreignKeyName: 'ticket_comments_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'profiles'

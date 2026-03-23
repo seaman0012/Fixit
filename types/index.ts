@@ -7,7 +7,7 @@ import type { Database } from './database.types'
  */
 
 export type Ticket = Database['public']['Tables']['tickets']['Row']
-export type Comment = Database['public']['Tables']['comments']['Row']
+export type Comment = Database['public']['Tables']['ticket_comments']['Row']
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type TicketHistory = Database['public']['Tables']['ticket_history']['Row']
 
