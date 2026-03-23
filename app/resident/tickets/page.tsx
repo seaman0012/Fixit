@@ -88,13 +88,13 @@ export default async function TicketsPage({
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">รายการแจ้งซ่อม</h1>
-        <p className="text-muted-foreground">รายการแจ้งซ่อมทั้งหมดของคุณ</p>
+        <p className="text-muted-foreground">รายการแจ้งซ่อมทั้งหมด</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>รายการของฉัน</CardTitle>
-          <CardDescription>ติดตามสถานะและดูรายละเอียดการแจ้งซ่อมของคุณ</CardDescription>
+          <CardDescription>ติดตามสถานะและดูรายละเอียดการแจ้งซ่อม</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue={statusFilter} className="w-full">

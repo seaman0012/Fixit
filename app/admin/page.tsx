@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Clock, AlertCircle, CheckCircle2, FileText } from 'lucide-react'
@@ -95,8 +96,10 @@ export default async function AdminDashboard() {
               <CardTitle>รายการแจ้งซ่อมล่าสุด</CardTitle>
               <CardDescription>รายการ 10 รายการล่าสุดที่แจ้งเข้ามา</CardDescription>
             </div>
-            <Link href="/admin/tickets">
-              <Badge className="hover:bg-primary/90 cursor-pointer">ดูทั้งหมด</Badge>
+            <Link href="/resident/tickets">
+              <Button variant="outline" size="sm">
+                ดูทั้งหมด
+              </Button>
             </Link>
           </div>
         </CardHeader>

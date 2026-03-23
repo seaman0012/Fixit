@@ -209,11 +209,10 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
 
               {ticket.completed_at && (
                 <>
-                  <Separator />
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="text-muted-foreground h-4 w-4" />
                     <div>
-                      <p className="text-sm font-medium">เสร็จสิ้นเมื่อ</p>
+                      <p className="text-sm font-medium">เสร็จสิ้น</p>
                       <p className="text-muted-foreground text-sm">
                         {format(new Date(ticket.completed_at), 'd MMMM yyyy, HH:mm น.', {
                           locale: th,

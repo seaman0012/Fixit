@@ -1,10 +1,10 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Clock, AlertCircle, CheckCircle2, MapPin, Calendar, User, Phone } from 'lucide-react'
+import { AlertCircle, CheckCircle2, MapPin, User, Phone } from 'lucide-react'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import Image from 'next/image'
@@ -235,7 +235,6 @@ export default async function AdminTicketDetailPage({
 
               {ticket.completed_at && (
                 <>
-                  <Separator />
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="text-muted-foreground h-4 w-4" />
                     <div>
