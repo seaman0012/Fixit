@@ -20,7 +20,9 @@ interface ResidentNavProps {
   profile: {
     full_name: string
     email: string
-    room_number: string | null
+    rooms?: {
+      room_number: string
+    } | null
   }
 }
 
@@ -93,9 +95,9 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
                 </Avatar>
                 <div className="hidden flex-col items-start text-left text-sm md:flex">
                   <span className="font-medium">{profile.full_name}</span>
-                  {profile.room_number && (
+                  {profile.rooms?.room_number && (
                     <span className="text-muted-foreground text-xs">
-                      ห้อง {profile.room_number}
+                      ห้อง {profile.rooms.room_number}
                     </span>
                   )}
                 </div>

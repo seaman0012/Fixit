@@ -26,9 +26,11 @@ export default async function AdminTicketsPage({
     .select(
       `
       *,
+      rooms:room_id (
+        room_number
+      ),
       profiles:user_id (
         full_name,
-        room_number,
         phone
       )
     `
@@ -48,7 +50,7 @@ export default async function AdminTicketsPage({
     return (
       ticket.title.toLowerCase().includes(search) ||
       ticket.description.toLowerCase().includes(search) ||
-      ticket.room_number.toLowerCase().includes(search) ||
+      ticket.rooms?.room_number?.toLowerCase().includes(search) ||
       ticket.profiles?.full_name?.toLowerCase().includes(search)
     )
   })
@@ -77,7 +79,7 @@ export default async function AdminTicketsPage({
                   <p className="text-muted-foreground line-clamp-2 text-sm">{ticket.description}</p>
                   <div className="text-muted-foreground flex items-center gap-4 text-xs">
                     <span>{ticket.profiles?.full_name || 'Unknown'}</span>
-                    <span>ห้อง {ticket.room_number}</span>
+                    <span>ห้อง {ticket.rooms?.room_number || '-'}</span>
                     {ticket.profiles?.phone && <span>โทร: {ticket.profiles.phone}</span>}
                     <span>
                       {formatDistanceToNow(new Date(ticket.created_at), {

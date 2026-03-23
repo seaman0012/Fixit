@@ -135,6 +135,44 @@ export default function NewTicketPage() {
       const imageUrls = await uploadImages(user.id)
       setUploading(false)
 
+      const normalizedRoomNumber = formData.roomNumber.trim()
+      let roomId: string
+
+      const { data: existingRoom, error: existingRoomError } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('room_number', normalizedRoomNumber)
+        .maybeSingle()
+
+      if (existingRoomError) throw existingRoomError
+
+      if (existingRoom) {
+        roomId = existingRoom.id
+      } else {
+        const { data: createdRoom, error: createRoomError } = await supabase
+          .from('rooms')
+          .insert({
+            room_number: normalizedRoomNumber,
+            floor: 'unknown',
+            status: 'occupied',
+          })
+          .select('id')
+          .single()
+
+        if (createRoomError) {
+          const { data: retryRoom, error: retryRoomError } = await supabase
+            .from('rooms')
+            .select('id')
+            .eq('room_number', normalizedRoomNumber)
+            .single()
+
+          if (retryRoomError) throw createRoomError
+          roomId = retryRoom.id
+        } else {
+          roomId = createdRoom.id
+        }
+      }
+
       // Create ticket
       const { data, error } = (await supabase
         .from('tickets')
@@ -143,7 +181,7 @@ export default function NewTicketPage() {
           title: formData.title,
           description: formData.description,
           category: formData.category,
-          room_number: formData.roomNumber,
+          room_id: roomId,
           image_urls: imageUrls,
           status: 'pending',
         } as any)

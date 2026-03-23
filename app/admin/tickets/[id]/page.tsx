@@ -62,10 +62,12 @@ export default async function AdminTicketDetailPage({
     .select(
       `
       *,
+      rooms:room_id (
+        room_number
+      ),
       profiles:user_id (
         full_name,
         email,
-        room_number,
         phone
       )
     `
@@ -196,7 +198,9 @@ export default async function AdminTicketDetailPage({
                 <MapPin className="text-muted-foreground h-4 w-4" />
                 <div>
                   <p className="text-sm font-medium">หมายเลขห้อง</p>
-                  <p className="text-muted-foreground text-sm">{ticket.room_number}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {ticket.rooms?.room_number || '-'}
+                  </p>
                 </div>
               </div>
 

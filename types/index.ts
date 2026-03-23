@@ -24,8 +24,14 @@ export interface CommentWithProfile extends Comment {
 
 export interface TicketWithProfile extends Ticket {
   profiles: Profile | null
+  rooms?: {
+    room_number: string
+  } | null
 }
 
 export interface AdminTicketWithProfile extends Ticket {
   profiles: Profile | null
+  rooms?: {
+    room_number: string
+  } | null
 }
