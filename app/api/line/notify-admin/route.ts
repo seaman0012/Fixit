@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { sendLineToAdmins } from '@/lib/line/notify-admin'
-import { categoryConfig, priorityConfig } from '@/lib/constants'
+import { categoryConfig } from '@/lib/constants'
 
 type NotifyAdminRequest = {
   ticketId?: string
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     const { data: ticket, error: ticketError } = (await supabase
       .from('tickets')
-      .select('id,title,category,priority,room_number,created_at')
+      .select('id,title,category,room_number,created_at')
       .eq('id', body.ticketId)
       .eq('user_id', user.id)
       .single()) as {
@@ -34,7 +34,6 @@ export async function POST(request: Request) {
         id: string
         title: string
         category: keyof typeof categoryConfig
-        priority: keyof typeof priorityConfig
         room_number: string
         created_at: string
       } | null
@@ -64,7 +63,6 @@ export async function POST(request: Request) {
       `หัวข้อ: ${ticket.title}`,
       `ห้อง: ${ticket.room_number}`,
       `ประเภท: ${categoryConfig[ticket.category] ?? ticket.category}`,
-      `ความเร่งด่วน: ${priorityConfig[ticket.priority]?.label ?? ticket.priority}`,
       `ผู้แจ้ง: ${profile?.full_name ?? 'ผู้ใช้งาน'}`,
       `เวลา: ${createdAt}`,
     ].join('\n')

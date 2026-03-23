@@ -9,7 +9,7 @@ import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import Image from 'next/image'
 import CommentSection from '@/components/resident/comment-section'
-import { statusConfig, categoryConfig, priorityConfig } from '@/lib/constants'
+import { statusConfig, categoryConfig } from '@/lib/constants'
 import type { TicketWithProfile, CommentWithProfile } from '@/types'
 
 export async function generateMetadata({
@@ -109,7 +109,6 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
 
   const status = statusConfig[ticket.status as keyof typeof statusConfig]
   const StatusIcon = status.icon
-  const priority = priorityConfig[ticket.priority as keyof typeof priorityConfig]
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -208,21 +207,12 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
 
               <Separator />
 
-              <div className="flex items-center gap-3">
-                <Clock className="text-muted-foreground h-4 w-4" />
-                <div>
-                  <p className="text-sm font-medium">ความเร่งด่วน</p>
-                  <Badge className={`mt-1 ${priority.color}`}>{priority.label}</Badge>
-                </div>
-              </div>
-
               {ticket.completed_at && (
                 <>
-                  <Separator />
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="text-muted-foreground h-4 w-4" />
                     <div>
-                      <p className="text-sm font-medium">เสร็จสิ้นเมื่อ</p>
+                      <p className="text-sm font-medium">เสร็จสิ้น</p>
                       <p className="text-muted-foreground text-sm">
                         {format(new Date(ticket.completed_at), 'd MMMM yyyy, HH:mm น.', {
                           locale: th,

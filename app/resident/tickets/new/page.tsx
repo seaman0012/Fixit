@@ -34,12 +34,6 @@ const categoryOptions = [
   { value: 'other', label: 'อื่นๆ' },
 ]
 
-const priorityOptions = [
-  { value: 'low', label: 'ต่ำ' },
-  { value: 'medium', label: 'ปานกลาง' },
-  { value: 'high', label: 'สูง' },
-]
-
 export default function NewTicketPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -51,7 +45,6 @@ export default function NewTicketPage() {
     title: '',
     description: '',
     category: '',
-    priority: 'medium',
     roomNumber: '',
   })
   const [imageFiles, setImageFiles] = useState<File[]>([])
@@ -150,7 +143,6 @@ export default function NewTicketPage() {
           title: formData.title,
           description: formData.description,
           category: formData.category,
-          priority: formData.priority,
           room_number: formData.roomNumber,
           image_urls: imageUrls,
           status: 'pending',
@@ -198,7 +190,6 @@ export default function NewTicketPage() {
       title: '',
       description: '',
       category: '',
-      priority: 'medium',
       roomNumber: '',
     })
     setImageFiles([])
@@ -258,25 +249,6 @@ export default function NewTicketPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {categoryOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="priority">ระดับความเร่งด่วน</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value) => setFormData({ ...formData, priority: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {priorityOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>

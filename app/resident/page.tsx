@@ -20,7 +20,6 @@ export default async function ResidentPage() {
     redirect('/login')
   }
 
-  // ดึงข้อมูล tickets ของ user
   const { data: tickets } = await supabase
     .from('tickets')
     .select('*')
@@ -28,7 +27,6 @@ export default async function ResidentPage() {
     .order('created_at', { ascending: false })
     .limit(5)
 
-  // นับจำนวนตามสถานะ
   const pendingCount = tickets?.filter((t: any) => t.status === 'pending').length || 0
   const inProgressCount = tickets?.filter((t: any) => t.status === 'in_progress').length || 0
   const completedCount = tickets?.filter((t: any) => t.status === 'completed').length || 0
@@ -39,7 +37,6 @@ export default async function ResidentPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">หน้าหลัก</h1>
-          <p className="text-muted-foreground">ยินดีต้อนรับสู่ระบบแจ้งซ่อม Fixit</p>
         </div>
         <Link href="/resident/tickets/new">
           <Button size="lg">

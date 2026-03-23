@@ -78,7 +78,7 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
             <Link href="/resident/tickets">
               <Button variant="ghost" size="sm">
                 <FileText className="mr-2 h-4 w-4" />
-                รายการแจ้งซ่อม
+                รายการซ่อม
               </Button>
             </Link>
           </div>
