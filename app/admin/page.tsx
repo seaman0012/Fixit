@@ -22,9 +22,11 @@ export default async function AdminDashboard() {
     .select(
       `
       *,
-      profiles:user_id (
-        full_name,
+      rooms:room_id (
         room_number
+      ),
+      profiles:user_id (
+        full_name
       )
     `
     )
@@ -125,7 +127,7 @@ export default async function AdminDashboard() {
                         </p>
                         <div className="text-muted-foreground flex items-center gap-4 text-xs">
                           <span>{ticket.profiles?.full_name || 'Unknown'}</span>
-                          <span>ห้อง {ticket.room_number}</span>
+                          <span>ห้อง {ticket.rooms?.room_number || '-'}</span>
                           <span>
                             {formatDistanceToNow(new Date(ticket.created_at), {
                               addSuffix: true,

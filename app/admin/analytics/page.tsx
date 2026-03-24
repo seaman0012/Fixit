@@ -10,7 +10,14 @@ export default async function AnalyticsPage() {
   // ดึงข้อมูล tickets ทั้งหมด
   const { data: tickets } = (await supabase
     .from('tickets')
-    .select('*')
+    .select(
+      `
+      *,
+      rooms:room_id (
+        room_number
+      )
+    `
+    )
     .order('created_at', { ascending: false })) as { data: any[] }
 
   if (!tickets) {
@@ -35,7 +42,8 @@ export default async function AnalyticsPage() {
 
   // หาห้องที่แจ้งบ่อยที่สุด
   const roomCounts = tickets.reduce((acc: Record<string, number>, ticket: any) => {
-    acc[ticket.room_number] = (acc[ticket.room_number] || 0) + 1
+    const roomNumber = ticket.rooms?.room_number || 'ไม่ระบุ'
+    acc[roomNumber] = (acc[roomNumber] || 0) + 1
     return acc
   }, {})
 

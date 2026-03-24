@@ -65,6 +65,9 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     .select(
       `
       *,
+      rooms:room_id (
+        room_number
+      ),
       profiles:user_id (
         full_name,
         email
@@ -85,7 +88,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
 
   // ดึงข้อมูล comments
   const { data: commentsRaw } = await supabase
-    .from('comments')
+    .from('ticket_comments')
     .select(
       `
       *,
@@ -189,7 +192,9 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <MapPin className="text-muted-foreground h-4 w-4" />
                 <div>
                   <p className="text-sm font-medium">หมายเลขห้อง</p>
-                  <p className="text-muted-foreground text-sm">{(ticket as any).room_number}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {(ticket as any).rooms?.room_number || '-'}
+                  </p>
                 </div>
               </div>
 

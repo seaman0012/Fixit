@@ -26,7 +26,17 @@ export async function POST(request: Request) {
 
     const { data: ticket, error: ticketError } = (await supabase
       .from('tickets')
-      .select('id,title,category,room_number,created_at')
+      .select(
+        `
+        id,
+        title,
+        category,
+        created_at,
+        rooms:room_id (
+          room_number
+        )
+      `
+      )
       .eq('id', body.ticketId)
       .eq('user_id', user.id)
       .single()) as {
@@ -34,7 +44,7 @@ export async function POST(request: Request) {
         id: string
         title: string
         category: keyof typeof categoryConfig
-        room_number: string
+        rooms: { room_number: string } | null
         created_at: string
       } | null
       error: { message?: string } | null
@@ -61,7 +71,7 @@ export async function POST(request: Request) {
     const message = [
       'แจ้งเตือน: มีรายการแจ้งซ่อมใหม่',
       `หัวข้อ: ${ticket.title}`,
-      `ห้อง: ${ticket.room_number}`,
+      `ห้อง: ${ticket.rooms?.room_number || '-'}`,
       `ประเภท: ${categoryConfig[ticket.category] ?? ticket.category}`,
       `ผู้แจ้ง: ${profile?.full_name ?? 'ผู้ใช้งาน'}`,
       `เวลา: ${createdAt}`,

@@ -15,7 +15,14 @@ export default async function ResidentLayout({ children }: { children: React.Rea
 
   const { data: profile } = (await supabase
     .from('profiles')
-    .select('*')
+    .select(
+      `
+      *,
+      rooms:room_id (
+        room_number
+      )
+    `
+    )
     .eq('id', user.id)
     .single()) as { data: any }
 

@@ -7,7 +7,7 @@ import type { Database } from './database.types'
  */
 
 export type Ticket = Database['public']['Tables']['tickets']['Row']
-export type Comment = Database['public']['Tables']['comments']['Row']
+export type Comment = Database['public']['Tables']['ticket_comments']['Row']
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type TicketHistory = Database['public']['Tables']['ticket_history']['Row']
 
@@ -24,8 +24,14 @@ export interface CommentWithProfile extends Comment {
 
 export interface TicketWithProfile extends Ticket {
   profiles: Profile | null
+  rooms?: {
+    room_number: string
+  } | null
 }
 
 export interface AdminTicketWithProfile extends Ticket {
   profiles: Profile | null
+  rooms?: {
+    room_number: string
+  } | null
 }

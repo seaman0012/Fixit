@@ -30,7 +30,14 @@ export default async function TicketsPage({
   // ดึงข้อมูล tickets
   let query = supabase
     .from('tickets')
-    .select('*')
+    .select(
+      `
+      *,
+      rooms:room_id (
+        room_number
+      )
+    `
+    )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -74,7 +81,9 @@ export default async function TicketsPage({
                     <StatusIcon className="mr-1 h-3 w-3" />
                     {status.label}
                   </Badge>
-                  <span className="text-muted-foreground text-xs">ห้อง {ticket.room_number}</span>
+                  <span className="text-muted-foreground text-xs">
+                    ห้อง {ticket.rooms?.room_number || '-'}
+                  </span>
                 </div>
               </div>
             </Link>

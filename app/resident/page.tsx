@@ -22,7 +22,14 @@ export default async function ResidentPage() {
 
   const { data: tickets } = await supabase
     .from('tickets')
-    .select('*')
+    .select(
+      `
+      *,
+      rooms:room_id (
+        room_number
+      )
+    `
+    )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(5)
@@ -128,7 +135,7 @@ export default async function ResidentPage() {
                           {status.label}
                         </Badge>
                         <span className="text-muted-foreground text-xs">
-                          ห้อง {ticket.room_number}
+                          ห้อง {ticket.rooms?.room_number || '-'}
                         </span>
                       </div>
                     </div>
