@@ -3,10 +3,14 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { sendLineToAdmins } from '@/lib/line/notify-admin'
 import { categoryConfig } from '@/lib/constants'
 
+// Request payload for triggering LINE admin notification.
 type NotifyAdminRequest = {
   ticketId?: string
 }
 
+// POST /api/line/notify-admin
+// Validates the current user, loads their ticket details, builds a readable message,
+// and forwards it to all configured LINE admin recipients.
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as NotifyAdminRequest
@@ -24,6 +28,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Only allow notifying for tickets owned by the authenticated user.
     const { data: ticket, error: ticketError } = (await supabase
       .from('tickets')
       .select(
@@ -63,6 +68,7 @@ export async function POST(request: Request) {
       error: { message?: string } | null
     }
 
+    // Build a message for admin LINE chat with key ticket metadata.
     const createdAt = new Date(ticket.created_at).toLocaleString('th-TH', {
       dateStyle: 'short',
       timeStyle: 'short',
@@ -77,6 +83,7 @@ export async function POST(request: Request) {
       `เวลา: ${createdAt}`,
     ].join('\n')
 
+    // Push the message to all configured admin LINE user IDs.
     const lineResult = await sendLineToAdmins(message)
 
     if (!lineResult.ok) {

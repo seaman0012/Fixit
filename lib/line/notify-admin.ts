@@ -5,6 +5,7 @@ type SendLineAdminsResult = {
   errors: string[]
 }
 
+// Parses comma-separated LINE user IDs from env.
 function getAdminUserIds(): string[] {
   const raw = process.env.LINE_ADMIN_USER_IDS ?? ''
   return raw
@@ -13,6 +14,8 @@ function getAdminUserIds(): string[] {
     .filter(Boolean)
 }
 
+// Sends the same text message to all configured admin LINE accounts via Push API.
+// Returns aggregate success/failure stats so callers can log partial failures.
 export async function sendLineToAdmins(message: string): Promise<SendLineAdminsResult> {
   const accessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN
   const adminUserIds = getAdminUserIds()
@@ -35,6 +38,7 @@ export async function sendLineToAdmins(message: string): Promise<SendLineAdminsR
     }
   }
 
+  // Send in parallel and keep per-recipient result instead of failing fast.
   const results = await Promise.allSettled(
     adminUserIds.map(async (to) => {
       const response = await fetch('https://api.line.me/v2/bot/message/push', {
