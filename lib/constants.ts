@@ -1,4 +1,4 @@
-import { Clock, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Clock, CheckCircle2, AlertCircle, Loader } from 'lucide-react'
 
 // Status configuration for tickets
 export const statusConfig = {
@@ -10,7 +10,7 @@ export const statusConfig = {
   in_progress: {
     label: 'กำลังดำเนินการ',
     color: 'bg-blue-100 text-blue-800',
-    icon: AlertCircle,
+    icon: Loader,
   },
   completed: {
     label: 'เสร็จสิ้น',
