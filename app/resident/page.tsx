@@ -126,12 +126,24 @@ export default async function ResidentPage() {
       </div>
 
       {/* Recent Tickets */}
-      <section className="flex flex-col gap-2">
+      <section className="flex flex-col">
         {tickets && tickets.length > 0 ? (
           <Card>
-            <CardHeader>
-              <CardTitle className="text-3xl">รายการแจ้งซ่อมล่าสุด</CardTitle>
-              <CardDescription className="text-muted-foreground">5 รายการล่าสุด</CardDescription>
+            <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <CardTitle className="text-2xl">
+                รายการแจ้งซ่อมล่าสุด
+                <div className="text-muted-foreground text-sm font-normal">5 รายการล่าสุด</div>
+              </CardTitle>
+              <CardAction>
+                <Link
+                  className="flex shrink-0 self-end md:ml-auto md:self-auto"
+                  href="/resident/tickets"
+                >
+                  <Button variant="outline" size="sm">
+                    ดูทั้งหมด
+                  </Button>
+                </Link>
+              </CardAction>
             </CardHeader>
             <CardContent>
               <DataTable
@@ -141,7 +153,7 @@ export default async function ResidentPage() {
                 showSearch={false}
                 showPagination={false}
                 showStatusFilter={false}
-                showViewAllButton
+                showViewAllButton={false}
               />
             </CardContent>
           </Card>
