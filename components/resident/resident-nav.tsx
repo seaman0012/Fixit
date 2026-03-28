@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Home, FileText, LogOut } from 'lucide-react'
+import { Home, FileText, LogOut, Plus } from 'lucide-react'
 interface ResidentNavProps {
   profile: {
     full_name: string
@@ -49,7 +49,7 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
     <nav className="bg-background shadow-2sm border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link href="/resident" className="flex items-center gap-2">
+          <Link href="/resident" className="flex items-center">
             <div className="relative h-8 w-8 overflow-hidden rounded">
               <Image
                 src="/fixit-icon-light.svg"
@@ -68,19 +68,25 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
                 className="hidden object-contain dark:block"
               />
             </div>
-            <span className="text-xl font-bold">Fixit</span>
+            <span className="sr-only hidden text-xl font-bold">Fixit</span>
           </Link>
           <div className="hidden items-center gap-4 md:flex">
             <Link href="/resident">
               <Button variant="ghost" size="sm">
-                <Home className="mr-2 h-4 w-4" />
+                {/* <Home className="mr-2 h-4 w-4" /> */}
                 หน้าหลัก
               </Button>
             </Link>
             <Link href="/resident/tickets">
               <Button variant="ghost" size="sm">
-                <FileText className="mr-2 h-4 w-4" />
+                {/* <FileText className="mr-2 h-4 w-4" /> */}
                 รายการซ่อม
+              </Button>
+            </Link>
+            <Link href="/resident/tickets/new">
+              <Button variant="ghost" size="sm">
+                {/* <Plus className="mr-2 h-4 w-4" /> */}
+                แจ้งซ่อม
               </Button>
             </Link>
           </div>
@@ -110,6 +116,25 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
                   <p className="text-muted-foreground text-xs">{profile.email}</p>
                 </div>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator className="md:hidden" />
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link href="/resident">
+                  <Home className="mr-2 h-4 w-4" />
+                  หน้าหลัก
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link href="/resident/tickets">
+                  <FileText className="mr-2 h-4 w-4" />
+                  รายการซ่อม
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link href="/resident/tickets/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  แจ้งซ่อม
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
