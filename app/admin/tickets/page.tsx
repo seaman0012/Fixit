@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { th } from 'date-fns/locale'
-import { Clock, AlertCircle, CheckCircle2, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { statusConfig, categoryConfig } from '@/lib/constants'
 
 export default async function AdminTicketsPage({
@@ -127,7 +127,7 @@ export default async function AdminTicketsPage({
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={statusFilter} className="w-full">
+          <Tabs defaultValue={statusFilter} className="w-full bg-amber-300">
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="all" asChild>
                 <Link href="/admin/tickets?status=all">ทั้งหมด</Link>

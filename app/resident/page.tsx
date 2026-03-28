@@ -8,10 +8,12 @@ import {
   CardTitle,
   CardAction,
   CardFooter,
+  CardContent,
 } from '@/components/ui/card'
-import { RecentTicketsTable } from '@/components/resident/recent-tickets-table'
+import { DataTable } from '@/components/ui/data-table'
 import Link from 'next/link'
 import { Plus, Clock, AlertCircle, CheckCircle2, FileText } from 'lucide-react'
+import type { DataTableTicket } from '@/components/ui/data-table'
 
 export default async function ResidentPage() {
   const supabase = await createServerSupabaseClient()
@@ -36,7 +38,20 @@ export default async function ResidentPage() {
     )
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-    .limit(5)
+
+  const tableTickets: DataTableTicket[] = (tickets ?? [])
+    .filter(
+      (ticket): ticket is typeof ticket & { created_at: string } => ticket.created_at !== null
+    )
+    .map((ticket) => ({
+      id: ticket.id,
+      title: ticket.title,
+      description: ticket.description,
+      category: ticket.category,
+      status: ticket.status,
+      created_at: ticket.created_at,
+      rooms: ticket.rooms,
+    }))
 
   const totalTickets = tickets?.length || 0
   const pendingCount = tickets?.filter((t: any) => t.status === 'pending').length || 0
@@ -111,16 +126,25 @@ export default async function ResidentPage() {
       </div>
 
       {/* Recent Tickets */}
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold">รายการแจ้งซ่อมล่าสุด</h2>
-            <p className="text-muted-foreground text-sm">รายการแจ้งซ่อม 5 รายการล่าสุดของคุณ</p>
-          </div>
-        </div>
-
+      <section className="flex flex-col gap-2">
         {tickets && tickets.length > 0 ? (
-          <RecentTicketsTable tickets={tickets as any} />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-3xl">รายการแจ้งซ่อมล่าสุด</CardTitle>
+              <CardDescription className="text-muted-foreground">5 รายการล่าสุด</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                tickets={tableTickets}
+                detailBasePath="/resident/tickets"
+                pageSize={5}
+                showSearch={false}
+                showPagination={false}
+                showStatusFilter={false}
+                showViewAllButton
+              />
+            </CardContent>
+          </Card>
         ) : (
           <div className="py-12 text-center">
             <p className="text-muted-foreground">ยังไม่มีรายการแจ้งซ่อม</p>
