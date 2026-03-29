@@ -11,6 +11,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { Send, Loader2 } from 'lucide-react'
 import type { CommentWithProfile } from '@/types'
+import { TZDate } from '@date-fns/tz/date'
 
 interface CommentSectionProps {
   ticketId: string
@@ -94,7 +95,7 @@ export default function CommentSection({
     }
   }, [ticketId, supabase, initialComments])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!newComment.trim()) return
 
@@ -171,9 +172,9 @@ export default function CommentSection({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Comments List */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {comments.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center text-sm">ยังไม่มีความคิดเห็น</p>
+            <p className="text-muted-foreground py-4 text-center text-sm">ยังไม่มีความคิดเห็น</p>
           ) : (
             comments.map((comment) => (
               <div key={comment.id} className="flex gap-3">
@@ -193,7 +194,7 @@ export default function CommentSection({
                       </Badge>
                     )}
                     <span className="text-muted-foreground text-xs">
-                      {formatDistanceToNow(new Date(comment.created_at!), {
+                      {formatDistanceToNow(new TZDate(comment.created_at!, 'Asia/Bangkok'), {
                         addSuffix: true,
                         locale: th,
                       })}
@@ -226,7 +227,7 @@ export default function CommentSection({
                 </>
               ) : (
                 <>
-                  <Send className="mr-2 h-4 w-4" />
+                  <Send className="mr-2 size-4" />
                   ส่งความคิดเห็น
                 </>
               )}

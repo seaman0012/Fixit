@@ -1,25 +1,25 @@
-import { Clock, CheckCircle2, AlertCircle } from 'lucide-react'
+import { Clock, CheckCircle2, AlertCircle, Loader } from 'lucide-react'
 
 // Status configuration for tickets
 export const statusConfig = {
   pending: {
     label: 'รอดำเนินการ',
-    color: 'bg-yellow-100 text-yellow-800',
+    color: 'text-muted-foreground',
     icon: Clock,
   },
   in_progress: {
     label: 'กำลังดำเนินการ',
-    color: 'bg-blue-100 text-blue-800',
-    icon: AlertCircle,
+    color: 'text-blue-500 dark:text-blue-400',
+    icon: Loader,
   },
   completed: {
     label: 'เสร็จสิ้น',
-    color: 'bg-green-100 text-green-800',
+    color: 'text-white dark:text-background fill-green-500  dark:fill-green-400',
     icon: CheckCircle2,
   },
   cancelled: {
     label: 'ยกเลิก',
-    color: 'bg-red-200 text-red-800',
+    color: 'text-white dark:text-background fill-red-500  dark:fill-red-400',
     icon: AlertCircle,
   },
 } as const
