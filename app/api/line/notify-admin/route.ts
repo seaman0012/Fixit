@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { sendLineToAdmins, type LinePushMessage } from '@/lib/line/notify-admin'
 import { categoryConfig } from '@/lib/constants'
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ticketId is required' }, { status: 400 })
     }
 
-    const supabase = await createServerSupabaseClient()
+    const supabase = await createClient()
     const {
       data: { user },
       error: authError,

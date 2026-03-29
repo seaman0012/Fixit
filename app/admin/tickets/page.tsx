@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import {
   Card,
   CardAction,
@@ -13,7 +13,7 @@ import { DataTable } from '@/components/ui/data-table'
 import type { DataTableTicket } from '@/components/ui/data-table'
 
 export default async function AdminTicketsPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const { data: tickets } = await supabase
     .from('tickets')

@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import {
@@ -27,7 +27,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>
 }): Promise<Metadata> {
   const { id } = await params
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const { data: ticket } = (await supabase
     .from('tickets')
@@ -62,7 +62,7 @@ export default async function AdminTicketDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   // ดึงข้อมูล ticket
   const { data: ticket, error } = (await supabase
