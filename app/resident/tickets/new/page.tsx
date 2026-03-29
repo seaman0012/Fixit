@@ -1,11 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -25,6 +24,14 @@ import {
 } from '@/components/ui/dialog'
 import { Upload, X, Loader2, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+  FieldSet,
+} from '@/components/ui/field'
 
 const categoryOptions = [
   { value: 'electrical', label: 'ไฟฟ้า' },
@@ -34,16 +41,12 @@ const categoryOptions = [
   { value: 'other', label: 'อื่นๆ' },
 ]
 
-const priorityOptions = [
-  { value: 'low', label: 'ต่ำ' },
-  { value: 'medium', label: 'ปานกลาง' },
-  { value: 'high', label: 'สูง' },
-]
-
 export default function NewTicketPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [roomLoading, setRoomLoading] = useState(true)
+  const [residentRoomId, setResidentRoomId] = useState('')
   const [error, setError] = useState('')
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   const [createdTicketId, setCreatedTicketId] = useState<string>('')
@@ -51,11 +54,55 @@ export default function NewTicketPage() {
     title: '',
     description: '',
     category: '',
-    priority: 'medium',
     roomNumber: '',
   })
   const [imageFiles, setImageFiles] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
+
+  useEffect(() => {
+    const loadResidentRoom = async () => {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+
+        if (!user) {
+          setError('กรุณาเข้าสู่ระบบ')
+          return
+        }
+
+        const { data: profile, error: profileError } = (await supabase
+          .from('profiles')
+          .select(
+            `
+            room_id,
+            rooms:room_id (
+              room_number
+            )
+          `
+          )
+          .eq('id', user.id)
+          .single()) as { data: any; error: any }
+
+        if (profileError) throw profileError
+
+        if (!profile?.room_id || !profile?.rooms?.room_number) {
+          setError('ไม่พบข้อมูลหมายเลขห้อง กรุณาติดต่อเจ้าหน้าที่')
+          return
+        }
+
+        setResidentRoomId(profile.room_id)
+        setFormData((prev) => ({ ...prev, roomNumber: profile.rooms.room_number }))
+      } catch {
+        setError('ไม่สามารถโหลดข้อมูลหมายเลขห้องได้ กรุณาลองใหม่อีกครั้ง')
+      } finally {
+        setRoomLoading(false)
+      }
+    }
+
+    loadResidentRoom()
+  }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -111,14 +158,26 @@ export default function NewTicketPage() {
     return uploadedUrls
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
     // Validation
-    if (!formData.title || !formData.description || !formData.category || !formData.roomNumber) {
+    if (!formData.title || !formData.description || !formData.category) {
       setError('กรุณากรอกข้อมูลให้ครบถ้วน')
+      setLoading(false)
+      return
+    }
+
+    if (roomLoading) {
+      setError('กำลังโหลดหมายเลขห้อง กรุณาลองอีกครั้ง')
+      setLoading(false)
+      return
+    }
+
+    if (!residentRoomId) {
+      setError('ไม่พบข้อมูลหมายเลขห้อง กรุณาติดต่อเจ้าหน้าที่')
       setLoading(false)
       return
     }
@@ -150,8 +209,7 @@ export default function NewTicketPage() {
           title: formData.title,
           description: formData.description,
           category: formData.category,
-          priority: formData.priority,
-          room_number: formData.roomNumber,
+          room_id: residentRoomId,
           image_urls: imageUrls,
           status: 'pending',
         } as any)
@@ -194,13 +252,12 @@ export default function NewTicketPage() {
 
   const handleReportAnother = () => {
     // Reset form
-    setFormData({
+    setFormData((prev) => ({
+      ...prev,
       title: '',
       description: '',
       category: '',
-      priority: 'medium',
-      roomNumber: '',
-    })
+    }))
     setImageFiles([])
     previewUrls.forEach((url) => URL.revokeObjectURL(url))
     setPreviewUrls([])
@@ -209,205 +266,199 @@ export default function NewTicketPage() {
     setError('')
   }
 
-  return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">แจ้งซ่อม</h1>
-        <p className="text-muted-foreground">กรอกรายละเอียดการแจ้งซ่อมและแนบรูปภาพประกอบ</p>
-      </div>
+  const handleSuccessDialogOpenChange = (open: boolean) => {
+    setShowSuccessDialog(open)
 
-      <Card>
-        <CardHeader>
+    if (!open) {
+      router.push('/resident')
+      router.refresh()
+    }
+  }
+
+  return (
+    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+      <Card className="rounded-2xl">
+        <CardHeader className="gap-1">
           <CardTitle>ข้อมูลการแจ้งซ่อม</CardTitle>
           <CardDescription>
             กรุณากรอกข้อมูลให้ครบถ้วนและชัดเจนเพื่อความรวดเร็วในการดำเนินการ
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
+              <div
+                role="alert"
+                className="bg-destructive/10 text-destructive rounded-md p-3 text-sm"
+              >
                 {error}
               </div>
             )}
-
-            <div className="space-y-2">
-              <Label htmlFor="title">
-                หัวข้อ <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="title"
-                placeholder="เช่น แอร์ไม่เย็น, ไฟในห้องน้ำไม่ติด"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category">
-                ประเภท <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="เลือกประเภทอุปกรณ์" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoryOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="priority">ระดับความเร่งด่วน</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value) => setFormData({ ...formData, priority: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {priorityOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="roomNumber">
-                หมายเลขห้อง <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="roomNumber"
-                placeholder="เช่น A101"
-                value={formData.roomNumber}
-                onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">
-                รายละเอียด <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                id="description"
-                placeholder="อธิบายปัญหาที่พบโดยละเอียด..."
-                rows={5}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="images">
-                รูปภาพประกอบ <span className="text-destructive">*</span>
-              </Label>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => document.getElementById('images')?.click()}
+            <FieldGroup>
+              <FieldSet>
+                <Field>
+                  <FieldLabel htmlFor="roomNumber">หมายเลขห้อง</FieldLabel>
+                  <Input
+                    id="roomNumber"
+                    value={roomLoading ? 'กำลังโหลด...' : formData.roomNumber}
+                    readOnly
+                    disabled={roomLoading}
+                    className="text-muted-foreground"
+                  />
+                  <FieldDescription className="text-muted-foreground mt-1 text-xs">
+                    ดึงจากข้อมูลผู้พักอาศัยอัตโนมัติ
+                  </FieldDescription>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="category">
+                    ประเภท <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    required
                   >
-                    <Upload className="mr-2 h-4 w-4" />
-                    อัปโหลดรูปภาพ
-                  </Button>
-                  <p className="text-muted-foreground text-sm">
-                    ไฟล์รูปภาพขนาดไม่เกิน 5MB (จำเป็นต้องแนบอย่างน้อย 1 รูป)
-                  </p>
-                </div>
-                <input
-                  id="images"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
-
-                {previewUrls.length > 0 && (
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                    {previewUrls.map((url, index) => (
-                      <div key={index} className="relative aspect-square">
-                        <Image
-                          src={url}
-                          alt={`Preview ${index + 1}`}
-                          fill
-                          className="rounded-lg object-cover"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="absolute -top-2 -right-2 h-6 w-6"
-                          onClick={() => removeImage(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                    <SelectTrigger>
+                      <SelectValue placeholder="เลือกประเภทอุปกรณ์" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {categoryOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="title">
+                    หัวข้อ <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Input
+                    id="title"
+                    placeholder="เช่น แอร์ไม่เย็น, ไฟในห้องน้ำไม่ติด"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="description">
+                    รายละเอียด <span className="text-destructive">*</span>
+                  </FieldLabel>
+                  <Textarea
+                    id="description"
+                    placeholder="อธิบายปัญหาที่พบโดยละเอียด..."
+                    rows={5}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    required
+                  />
+                </Field>
+              </FieldSet>
+              <FieldSeparator />
+              <Field>
+                <FieldLabel htmlFor="images">
+                  รูปภาพประกอบ <span className="text-destructive">*</span>
+                </FieldLabel>
+                <FieldDescription className="text-muted-foreground mt-1 text-xs">
+                  ไฟล์รูปภาพขนาดไม่เกิน 5MB (จำเป็นต้องแนบอย่างน้อย 1 รูป)
+                </FieldDescription>
+                <div className="bg-muted/20 flex flex-col gap-4 rounded-xl border border-dashed p-4">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full sm:w-fit"
+                      onClick={() => document.getElementById('images')?.click()}
+                    >
+                      <Upload data-icon="inline-start" />
+                      อัปโหลดรูปภาพ
+                    </Button>
                   </div>
-                )}
-              </div>
-            </div>
+                  <input
+                    id="images"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
 
-            <div className="flex gap-4">
-              <Button type="submit" disabled={loading || uploading} className="flex-1">
-                {uploading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    กำลังอัปโหลดรูปภาพ...
-                  </>
-                ) : loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    กำลังสร้างรายการ...
-                  </>
-                ) : (
-                  'สร้างรายการแจ้งซ่อม'
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.back()}
-                disabled={loading || uploading}
-              >
-                ยกเลิก
-              </Button>
-            </div>
+                  {previewUrls.length > 0 && (
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                      {previewUrls.map((url, index) => (
+                        <div key={index} className="relative aspect-square">
+                          <Image
+                            src={url}
+                            alt={`Preview ${index + 1}`}
+                            fill
+                            className="rounded-lg object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-6 w-6"
+                            onClick={() => removeImage(index)}
+                          >
+                            <X />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </Field>
+
+              <div className="flex flex-col-reverse gap-3 sm:flex-row">
+                <Button
+                  type="submit"
+                  disabled={loading || uploading || roomLoading}
+                  className="w-full sm:flex-1"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 data-icon="inline-start" className="animate-spin" />
+                      กำลังอัปโหลดรูปภาพ...
+                    </>
+                  ) : loading ? (
+                    <>
+                      <Loader2 data-icon="inline-start" className="animate-spin" />
+                      กำลังสร้างรายการ...
+                    </>
+                  ) : (
+                    'สร้างรายการแจ้งซ่อม'
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => router.back()}
+                  disabled={loading || uploading}
+                >
+                  ยกเลิก
+                </Button>
+              </div>
+            </FieldGroup>
           </form>
         </CardContent>
       </Card>
 
       {/* Success Dialog */}
-      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+      <Dialog open={showSuccessDialog} onOpenChange={handleSuccessDialogOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full">
+              <CheckCircle2 className="size-8 text-green-500 dark:text-green-400" />
             </div>
             <DialogTitle className="text-center">สร้างรายการแจ้งซ่อมสำเร็จ!</DialogTitle>
             <DialogDescription className="text-center">
               ระบบได้รับเรื่องแจ้งซ่อมของคุณเรียบร้อยแล้ว
-              เจ้าหน้าที่จะดำเนินการตรวจสอบและติดต่อกลับโดยเร็วที่สุด
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex-col gap-2 sm:flex-col">
+          <DialogFooter className="flex-col gap-4 sm:flex-col">
             <Button onClick={handleViewTicket} className="w-full" size="lg">
               ดูรายการแจ้งซ่อม
             </Button>

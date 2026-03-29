@@ -8,8 +8,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Disable register route
-  if (request.nextUrl.pathname === '/register') {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (request.nextUrl.pathname === '/auth/register') {
+    return NextResponse.redirect(new URL('/auth/login', request.url))
   }
 
   let supabaseResponse = NextResponse.next({
@@ -18,7 +18,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
     {
       cookies: {
         getAll() {
@@ -41,12 +41,12 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = ['/login', '/register'].includes(request.nextUrl.pathname)
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
 
   // If unauthenticated and not on auth routes, send to login.
   if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = '/auth/login'
     return NextResponse.redirect(url)
   }
 
