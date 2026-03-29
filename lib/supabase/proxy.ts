@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = ['/auth/login', '/auth/register'].includes(request.nextUrl.pathname)
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
 
   // If unauthenticated and not on auth routes, send to login.
   if (!user && !isAuthRoute) {

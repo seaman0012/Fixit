@@ -3,7 +3,7 @@ import Image from 'next/image'
 
 export default function Page() {
   return (
-    <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
+    <div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-2">
         <a href="#" className="flex items-center gap-2 self-center font-medium">
           <div className="relative mx-auto my-4 flex size-8 items-center justify-center overflow-hidden rounded-md">

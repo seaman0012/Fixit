@@ -77,7 +77,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
             )}
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="email">อีเมล</FieldLabel>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
                   type="email"
