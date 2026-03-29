@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
+import { cn } from '@/lib/utils'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from './ui/field'
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
   const [email, setEmail] = useState('')
@@ -24,7 +26,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const [error, setError] = useState('')
   const router = useRouter()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     const supabase = createClient()
     setLoading(true)
@@ -60,54 +62,61 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
         <CardHeader className="space-x-1 text-center">
           <CardTitle className="text-2xl font-bold">เข้าสู่ระบบ</CardTitle>
           <CardDescription>กรอกอีเมลและรหัสผ่านเพื่อเข้าสู่ระบบ Fixit</CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
+        <CardContent>
+          <form onSubmit={handleLogin}>
             {error && (
               <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
                 {error}
               </div>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="email">อีเมล</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">รหัสผ่าน</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="mt-4 flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
-            </Button>
-            <p className="text-muted-foreground text-center text-sm">
-              ยังไม่มีบัญชี?{' '}
-              <Link href="/register" className="text-primary font-medium hover:underline">
-                ติดต่อแอดมิน
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="email">อีเมล</FieldLabel>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </Field>
+              <Field>
+                <div className="flex items-center">
+                  <FieldLabel htmlFor="password">รหัสผ่าน</FieldLabel>
+                  <a
+                    href="/forgot-password"
+                    className="ml-auto text-sm underline-offset-4 hover:underline"
+                  >
+                    ลืมรหัสผ่าน?
+                  </a>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </Field>
+              <Field>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
+                </Button>
+                <FieldDescription className="text-center">
+                  ไม่มีบัญชี? โปรดติดต่อแอดมิน{' '}
+                </FieldDescription>
+              </Field>
+            </FieldGroup>
+          </form>
+        </CardContent>
       </Card>
     </div>
   )

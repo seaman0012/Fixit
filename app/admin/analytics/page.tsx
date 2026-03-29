@@ -74,7 +74,7 @@ export default async function AnalyticsPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">วิเคราะห์ข้อมูล</h1>
-        <p className="text-muted-foreground">ข้อมูลสถิติและการวิเคราะห์เพื่อการจัดการเชิงรุก</p>
+        <p className="text-muted-foreground">ข้อมูลสถิติและการวิเคราะห์เพื่อการจัดการ</p>
       </div>
 
       {/* Summary Stats */}
@@ -132,7 +132,7 @@ export default async function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>ประเภทที่พบบ่อยที่สุด</CardTitle>
-            <CardDescription>สถิติอุปกรณ์ที่เสียบ่อย เพื่อวางแผนการซ่อมบำรุง</CardDescription>
+            <CardDescription>สถิติอุปกรณ์ที่เสียบ่อย</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -165,7 +165,7 @@ export default async function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>ห้องที่แจ้งบ่อยที่สุด</CardTitle>
-            <CardDescription>ห้องที่มีปัญหาบ่อย อาจต้องตรวจสอบเชิงรุก</CardDescription>
+            <CardDescription>ห้องที่มีปัญหาบ่อย</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

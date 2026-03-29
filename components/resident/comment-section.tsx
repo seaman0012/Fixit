@@ -94,7 +94,7 @@ export default function CommentSection({
     }
   }, [ticketId, supabase, initialComments])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!newComment.trim()) return
 
