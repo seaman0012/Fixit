@@ -52,7 +52,7 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
           <Link href="/resident" className="flex items-center">
             <div className="relative h-8 w-8 overflow-hidden rounded">
               <Image
-                src="/fixit-icon-light.svg"
+                src="/fixit-icon-circle-light.svg"
                 alt="Fixit logo"
                 fill
                 sizes="32px"
@@ -60,7 +60,7 @@ export default function ResidentNav({ profile }: ResidentNavProps) {
                 className="object-contain dark:hidden"
               />
               <Image
-                src="/fixit-icon-dark.svg"
+                src="/fixit-icon-circle-dark.svg"
                 alt="Fixit logo"
                 fill
                 sizes="32px"

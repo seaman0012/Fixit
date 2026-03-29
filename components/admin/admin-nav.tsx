@@ -50,7 +50,7 @@ export default function AdminNav({ profile }: AdminNavProps) {
           <Link href="/admin" className="flex items-center gap-2">
             <div className="relative h-8 w-8 overflow-hidden rounded">
               <Image
-                src="/fixit-icon-light.svg"
+                src="/fixit-icon-circle-light.svg"
                 alt="Fixit logo"
                 fill
                 sizes="32px"
@@ -58,7 +58,7 @@ export default function AdminNav({ profile }: AdminNavProps) {
                 className="object-contain dark:hidden"
               />
               <Image
-                src="/fixit-icon-dark.svg"
+                src="/fixit-icon-circle-dark.svg"
                 alt="Fixit logo"
                 fill
                 sizes="32px"
