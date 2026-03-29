@@ -124,7 +124,7 @@ export default async function AnalyticsPage() {
             </CardAction>
           </CardHeader>
           <CardFooter>
-            <p className="text-muted-foreground text-xs">คิดเป็น {completionRate}% ของทั้งหมด</p>
+            <p className="text-muted-foreground text-xs">{completionRate}% ของทั้งหมด</p>
           </CardFooter>
         </Card>
         <Card>
@@ -144,11 +144,11 @@ export default async function AnalyticsPage() {
         <Card>
           <CardHeader>
             <CardDescription>ประเภทที่เสียบ่อยที่สุด</CardDescription>
-            <CardTitle className="text-2xl font-semibold">
+            <CardTitle className="text-3xl font-semibold">
               {topCategories[0]?.category || 'N/A'}
             </CardTitle>
             <CardAction>
-              <Wrench className="size-4 text-amber-600" />
+              <Wrench className="size-4 text-yellow-600" />
             </CardAction>
           </CardHeader>
           <CardFooter>
@@ -179,7 +179,7 @@ export default async function AnalyticsPage() {
                     <span className="text-muted-foreground text-sm">{item.count} รายการ</span>
                     <div className="bg-muted h-2 w-24 overflow-hidden rounded-full">
                       <div
-                        className="bg-primary h-full"
+                        className="bg-chart-2 h-full"
                         style={{
                           width: `${(item.count / tickets.length) * 100}%`,
                         }}
@@ -211,7 +211,7 @@ export default async function AnalyticsPage() {
                     <span className="text-muted-foreground text-sm">{item.count} ครั้ง</span>
                     <div className="bg-muted h-2 w-24 overflow-hidden rounded-full">
                       <div
-                        className="bg-primary h-full"
+                        className="bg-chart-2 h-full"
                         style={{
                           width: `${(item.count / tickets.length) * 100}%`,
                         }}

@@ -10,7 +10,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { BarChart, Bar, PieChart, Pie, Cell, Rectangle, XAxis, CartesianGrid } from 'recharts'
+import { BarChart, Bar, PieChart, Pie, Rectangle, XAxis, CartesianGrid } from 'recharts'
 
 interface AnalyticsChartsProps {
   categoryStats: { key: string; category: string; count: number }[]
@@ -50,15 +50,15 @@ const categoryChartConfig = {
 const statusChartConfig = {
   pending: {
     label: 'รอดำเนินการ',
-    color: 'var(--chart-1)',
+    color: 'var(--chart-2)',
   },
   in_progress: {
     label: 'กำลังดำเนินการ',
-    color: 'var(--chart-2)',
+    color: 'var(--chart-3)',
   },
   completed: {
     label: 'เสร็จสิ้น',
-    color: 'var(--chart-3)',
+    color: 'var(--chart-4)',
   },
   cancelled: {
     label: 'ยกเลิก',
@@ -73,6 +73,17 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
     0
   )
 
+  // Transform data with fill colors
+  const categoryChartData = categoryStats.map((entry) => ({
+    ...entry,
+    fill: `var(--color-${entry.key})`,
+  }))
+
+  const statusChartData = statusStats.map((entry) => ({
+    ...entry,
+    fill: `var(--color-${entry.key})`,
+  }))
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card className="rounded-2xl">
@@ -80,14 +91,15 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
           <CardTitle>สถิติตามประเภทอุปกรณ์</CardTitle>
           <CardDescription>จำนวนการแจ้งซ่อมแบ่งตามประเภท</CardDescription>
         </CardHeader>
-        <CardContent className="h-75">
-          <ChartContainer config={categoryChartConfig} className="h-full w-full">
-            <BarChart accessibilityLayer data={categoryStats}>
+        <CardContent className="min-h-0">
+          <ChartContainer config={categoryChartConfig} className="aspect-video min-h-0 w-full">
+            <BarChart accessibilityLayer data={categoryChartData}>
               <CartesianGrid vertical={false} />
               <XAxis dataKey="category" tickLine={false} tickMargin={10} axisLine={false} />
               <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
               <Bar
                 dataKey="count"
+                fill="var(--color-electrical)"
                 strokeWidth={2}
                 radius={8}
                 shape={({ index, ...props }: BarShapeProps) =>
@@ -104,11 +116,7 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
                     <Rectangle {...props} />
                   )
                 }
-              >
-                {categoryStats.map((entry) => (
-                  <Cell key={entry.key} fill={`var(--color-${entry.key})`} />
-                ))}
-              </Bar>
+              />
             </BarChart>
           </ChartContainer>
         </CardContent>
@@ -119,26 +127,22 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
           <CardTitle>สถิติตามสถานะ</CardTitle>
           <CardDescription>สัดส่วนของรายการตามสถานะปัจจุบัน</CardDescription>
         </CardHeader>
-        <CardContent className="h-75">
-          <ChartContainer config={statusChartConfig} className="h-full w-full">
+        <CardContent className="flex flex-col">
+          <ChartContainer config={statusChartConfig} className="flex-1">
             <PieChart>
               <Pie
-                data={statusStats}
+                data={statusChartData}
                 cx="50%"
                 cy="50%"
-                nameKey="status"
+                nameKey="key"
                 labelLine={false}
-                outerRadius={80}
+                outerRadius="70%"
                 dataKey="count"
-                strokeWidth={4}
-              >
-                {statusStats.map((entry) => (
-                  <Cell key={entry.key} fill={`var(--color-${entry.key})`} />
-                ))}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent nameKey="status" hideLabel />} />
+                stroke="none"
+              />
+              <ChartTooltip content={<ChartTooltipContent nameKey="key" hideLabel />} />
               <ChartLegend
-                content={<ChartLegendContent nameKey="status" className="flex-wrap gap-2" />}
+                content={<ChartLegendContent nameKey="key" className="flex-wrap gap-2 pt-4" />}
               />
             </PieChart>
           </ChartContainer>
