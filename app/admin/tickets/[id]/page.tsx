@@ -19,6 +19,7 @@ import CommentSection from '@/components/resident/comment-section'
 import StatusUpdateForm from '@/components/admin/status-update-form'
 import { statusConfig, categoryConfig } from '@/lib/constants'
 import type { AdminTicketWithProfile, CommentWithProfile } from '@/types'
+import { TZDate } from '@date-fns/tz'
 
 export async function generateMetadata({
   params,
@@ -123,7 +124,9 @@ export default async function AdminTicketDetailPage({
               <CardTitle>รายละเอียด</CardTitle>
               <CardDescription>
                 สร้างเมื่อ{' '}
-                {format(new Date(ticket.created_at!), 'd MMMM yyyy, HH:mm น.', { locale: th })}
+                {format(new TZDate(ticket.created_at!, 'Asia/Bangkok'), 'd MMMM yyyy, HH:mm', {
+                  locale: th,
+                })}
               </CardDescription>
               <CardAction>
                 <Badge variant="outline" className="text-muted-foreground">
@@ -236,9 +239,11 @@ export default async function AdminTicketDetailPage({
                     <div>
                       <p className="text-sm font-medium">เสร็จสิ้นเมื่อ</p>
                       <p className="text-muted-foreground text-sm">
-                        {format(new Date(ticket.completed_at), 'd MMMM yyyy, HH:mm น.', {
-                          locale: th,
-                        })}
+                        {format(
+                          new TZDate(ticket.completed_at, 'Asia/Bangkok'),
+                          'd MMMM yyyy, HH:mm',
+                          { locale: th }
+                        )}
                       </p>
                     </div>
                   </div>
@@ -262,7 +267,9 @@ export default async function AdminTicketDetailPage({
                 <div className="pb-4">
                   <p className="text-sm font-medium">สร้างรายการ</p>
                   <p className="text-muted-foreground text-xs">
-                    {format(new Date(ticket.created_at!), 'd MMM yyyy, HH:mm', { locale: th })}
+                    {format(new TZDate(ticket.created_at!, 'Asia/Bangkok'), 'd MMMM yyyy, HH:mm', {
+                      locale: th,
+                    })}
                   </p>
                 </div>
               </div>
@@ -280,7 +287,11 @@ export default async function AdminTicketDetailPage({
                   <div className={ticket.status === 'in_progress' ? '' : 'pb-4'}>
                     <p className="text-sm font-medium">เริ่มดำเนินการ</p>
                     <p className="text-muted-foreground text-xs">
-                      {format(new Date(ticket.updated_at!), 'd MMM yyyy, HH:mm', { locale: th })}
+                      {format(
+                        new TZDate(ticket.updated_at!, 'Asia/Bangkok'),
+                        'd MMMM yyyy, HH:mm',
+                        { locale: th }
+                      )}
                     </p>
                   </div>
                 </div>
@@ -294,7 +305,11 @@ export default async function AdminTicketDetailPage({
                   <div>
                     <p className="text-sm font-medium">เสร็จสิ้น</p>
                     <p className="text-muted-foreground text-xs">
-                      {format(new Date(ticket.completed_at), 'd MMM yyyy, HH:mm', { locale: th })}
+                      {format(
+                        new TZDate(ticket.completed_at, 'Asia/Bangkok'),
+                        'd MMMM yyyy, HH:mm',
+                        { locale: th }
+                      )}
                     </p>
                   </div>
                 </div>

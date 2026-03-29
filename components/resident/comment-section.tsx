@@ -11,6 +11,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { th } from 'date-fns/locale'
 import { Send, Loader2 } from 'lucide-react'
 import type { CommentWithProfile } from '@/types'
+import { TZDate } from '@date-fns/tz/date'
 
 interface CommentSectionProps {
   ticketId: string
@@ -193,7 +194,7 @@ export default function CommentSection({
                       </Badge>
                     )}
                     <span className="text-muted-foreground text-xs">
-                      {formatDistanceToNow(new Date(comment.created_at!), {
+                      {formatDistanceToNow(new TZDate(comment.created_at!, 'Asia/Bangkok'), {
                         addSuffix: true,
                         locale: th,
                       })}

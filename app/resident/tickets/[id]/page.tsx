@@ -11,13 +11,14 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Clock, AlertCircle, CheckCircle2, MapPin, Calendar, User } from 'lucide-react'
+import { AlertCircle, CheckCircle2, MapPin, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import Image from 'next/image'
 import CommentSection from '@/components/resident/comment-section'
 import { statusConfig, categoryConfig } from '@/lib/constants'
 import type { TicketWithProfile, CommentWithProfile } from '@/types'
+import { TZDate } from '@date-fns/tz'
 
 export async function generateMetadata({
   params,
@@ -63,7 +64,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/login')
+    redirect('/auth/login')
   }
 
   // ดึงข้อมูล ticket
@@ -135,7 +136,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
               <CardTitle>รายละเอียด</CardTitle>
               <CardDescription>
                 สร้างเมื่อ{' '}
-                {format(new Date(ticket.created_at!), 'd MMMM yyyy, HH:mm น.', {
+                {format(new TZDate(ticket.created_at!, 'Asia/Bangkok'), 'd MMMM yyyy, HH:mm', {
                   locale: th,
                 })}
               </CardDescription>
@@ -221,9 +222,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                     <div>
                       <p className="text-sm font-medium">เสร็จสิ้น</p>
                       <p className="text-muted-foreground text-sm">
-                        {format(new Date(ticket.completed_at), 'd MMMM yyyy, HH:mm น.', {
-                          locale: th,
-                        })}
+                        {format(
+                          new TZDate(ticket.completed_at, 'Asia/Bangkok'),
+                          'd MMMM yyyy, HH:mm',
+                          { locale: th }
+                        )}
                       </p>
                     </div>
                   </div>
@@ -248,7 +251,9 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <div className="pb-4">
                   <p className="text-sm font-medium">สร้างรายการ</p>
                   <p className="text-muted-foreground text-xs">
-                    {format(new Date(ticket.created_at!), 'd MMM yyyy, HH:mm', { locale: th })}
+                    {format(new TZDate(ticket.created_at!, 'Asia/Bangkok'), 'd MMMM yyyy, HH:mm', {
+                      locale: th,
+                    })}
                   </p>
                 </div>
               </div>
@@ -266,7 +271,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                   <div className={ticket.status === 'in_progress' ? '' : 'pb-4'}>
                     <p className="text-sm font-medium">เริ่มดำเนินการ</p>
                     <p className="text-muted-foreground text-xs">
-                      {format(new Date(ticket.updated_at!), 'd MMM yyyy, HH:mm', { locale: th })}
+                      {format(
+                        new TZDate(ticket.updated_at!, 'Asia/Bangkok'),
+                        'd MMMM yyyy, HH:mm',
+                        { locale: th }
+                      )}
                     </p>
                   </div>
                 </div>
@@ -280,7 +289,11 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                   <div>
                     <p className="text-sm font-medium">เสร็จสิ้น</p>
                     <p className="text-muted-foreground text-xs">
-                      {format(new Date(ticket.completed_at), 'd MMM yyyy, HH:mm', { locale: th })}
+                      {format(
+                        new TZDate(ticket.completed_at, 'Asia/Bangkok'),
+                        'd MMMM yyyy, HH:mm',
+                        { locale: th }
+                      )}
                     </p>
                   </div>
                 </div>
