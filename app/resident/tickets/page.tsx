@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import {
   Card,
@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 
 export default async function TicketsPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const {
     data: { user },

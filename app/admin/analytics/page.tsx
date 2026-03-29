@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import {
   Card,
   CardAction,
@@ -14,7 +14,7 @@ import { categoryConfig } from '@/lib/constants'
 import { ChartColumnIncreasing, Clock3, FileText, Wrench } from 'lucide-react'
 
 export default async function AnalyticsPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   // ดึงข้อมูล tickets ทั้งหมด
   const { data: tickets } = (await supabase

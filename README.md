@@ -20,7 +20,7 @@ npm install
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your_supabase_anon_key
 
 # Optional LINE integration
 LINE_CHANNEL_ACCESS_TOKEN=your_line_channel_access_token

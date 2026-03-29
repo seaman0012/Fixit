@@ -18,7 +18,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
     {
       cookies: {
         getAll() {
@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = ['/auth/login', '/auth/register'].includes(request.nextUrl.pathname)
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
 
   // If unauthenticated and not on auth routes, send to login.
   if (!user && !isAuthRoute) {

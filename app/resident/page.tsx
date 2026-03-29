@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,7 +16,7 @@ import { Plus, Clock, AlertCircle, CheckCircle2, FileText } from 'lucide-react'
 import type { DataTableTicket } from '@/components/ui/data-table'
 
 export default async function ResidentPage() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const {
     data: { user },

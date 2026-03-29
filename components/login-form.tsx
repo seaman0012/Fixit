@@ -77,7 +77,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
             )}
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="email">อีเมล</FieldLabel>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
                   type="email"
@@ -91,7 +91,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">รหัสผ่าน</FieldLabel>
                   <a
-                    href="/forgot-password"
+                    href="/auth/forgot-password"
                     className="ml-auto text-sm underline-offset-4 hover:underline"
                   >
                     ลืมรหัสผ่าน?

@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -15,7 +15,7 @@ import { Clock, AlertCircle, CheckCircle2, FileText } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const { data: tickets } = (await supabase
     .from('tickets')

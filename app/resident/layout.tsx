@@ -1,9 +1,9 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import ResidentNav from '@/components/resident/resident-nav'
 
 export default async function ResidentLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const {
     data: { user },
