@@ -35,18 +35,31 @@ export default async function AnalyticsPage() {
 
   // วิเคราะห์ข้อมูล
   const categoryStats = Object.entries(categoryConfig).map(([key, label]) => {
-    const count = tickets.filter((t: any) => t.category === key).length
-    return { category: label, count }
+    const count = tickets.filter((ticket: any) => ticket.category === key).length
+    return { key, category: label, count }
   })
 
   const statusStats = [
-    { status: 'รอดำเนินการ', count: tickets.filter((t: any) => t.status === 'pending').length },
     {
-      status: 'กำลังดำเนินการ',
-      count: tickets.filter((t: any) => t.status === 'in_progress').length,
+      key: 'pending',
+      status: 'รอดำเนินการ',
+      count: tickets.filter((ticket: any) => ticket.status === 'pending').length,
     },
-    { status: 'เสร็จสิ้น', count: tickets.filter((t: any) => t.status === 'completed').length },
-    { status: 'ยกเลิก', count: tickets.filter((t: any) => t.status === 'cancelled').length },
+    {
+      key: 'in_progress',
+      status: 'กำลังดำเนินการ',
+      count: tickets.filter((ticket: any) => ticket.status === 'in_progress').length,
+    },
+    {
+      key: 'completed',
+      status: 'เสร็จสิ้น',
+      count: tickets.filter((ticket: any) => ticket.status === 'completed').length,
+    },
+    {
+      key: 'cancelled',
+      status: 'ยกเลิก',
+      count: tickets.filter((ticket: any) => ticket.status === 'cancelled').length,
+    },
   ]
 
   // หาห้องที่แจ้งบ่อยที่สุด
@@ -62,7 +75,7 @@ export default async function AnalyticsPage() {
     .map(([room, count]) => ({ room, count }))
 
   // หาประเภทที่เสียบ่อยที่สุด
-  const topCategories = categoryStats.sort((a, b) => b.count - a.count).slice(0, 5)
+  const topCategories = [...categoryStats].sort((a, b) => b.count - a.count).slice(0, 5)
 
   // คำนวณเวลาเฉลี่ยในการดำเนินการ
   const completedTickets = tickets.filter((t: any) => t.completed_at)

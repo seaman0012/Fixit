@@ -1,87 +1,147 @@
 'use client'
 
+import type { ComponentProps } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts'
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart'
+import { BarChart, Bar, PieChart, Pie, Cell, Rectangle, XAxis, CartesianGrid } from 'recharts'
 
 interface AnalyticsChartsProps {
-  categoryStats: { category: string; count: number }[]
-  statusStats: { status: string; count: number }[]
+  categoryStats: { key: string; category: string; count: number }[]
+  statusStats: { key: string; status: string; count: number }[]
 }
 
-const COLORS = {
-  category: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-  status: ['#eab308', '#3b82f6', '#10b981', '#6b7280'],
+type BarShapeProps = ComponentProps<typeof Rectangle> & {
+  index?: number
 }
+
+const categoryChartConfig = {
+  count: {
+    label: 'จำนวนครั้ง',
+  },
+  electrical: {
+    label: 'ไฟฟ้า',
+    color: 'var(--chart-1)',
+  },
+  plumbing: {
+    label: 'ประปา',
+    color: 'var(--chart-2)',
+  },
+  air_conditioning: {
+    label: 'เครื่องปรับอากาศ',
+    color: 'var(--chart-3)',
+  },
+  furniture: {
+    label: 'เฟอร์นิเจอร์',
+    color: 'var(--chart-4)',
+  },
+  other: {
+    label: 'อื่นๆ',
+    color: 'var(--chart-5)',
+  },
+} satisfies ChartConfig
+
+const statusChartConfig = {
+  pending: {
+    label: 'รอดำเนินการ',
+    color: 'var(--chart-1)',
+  },
+  in_progress: {
+    label: 'กำลังดำเนินการ',
+    color: 'var(--chart-2)',
+  },
+  completed: {
+    label: 'เสร็จสิ้น',
+    color: 'var(--chart-3)',
+  },
+  cancelled: {
+    label: 'ยกเลิก',
+    color: 'var(--muted-foreground)',
+  },
+} satisfies ChartConfig
 
 export default function AnalyticsCharts({ categoryStats, statusStats }: AnalyticsChartsProps) {
+  const maxCount = Math.max(...categoryStats.map((item) => item.count), Number.NEGATIVE_INFINITY)
+  const ACTIVE_INDEX = Math.max(
+    categoryStats.findIndex((item) => item.count === maxCount),
+    0
+  )
+
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      {/* Category Chart */}
-      <Card>
+      <Card className="rounded-2xl">
         <CardHeader>
           <CardTitle>สถิติตามประเภทอุปกรณ์</CardTitle>
           <CardDescription>จำนวนการแจ้งซ่อมแบ่งตามประเภท</CardDescription>
         </CardHeader>
         <CardContent className="h-75">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={categoryStats}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="category" fontSize={12} />
-              <YAxis fontSize={12} />
-              <Tooltip />
-              <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]}>
-                {categoryStats.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS.category[index % COLORS.category.length]}
-                  />
+          <ChartContainer config={categoryChartConfig} className="h-full w-full">
+            <BarChart accessibilityLayer data={categoryStats}>
+              <CartesianGrid vertical={false} />
+              <XAxis dataKey="category" tickLine={false} tickMargin={10} axisLine={false} />
+              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+              <Bar
+                dataKey="count"
+                strokeWidth={2}
+                radius={8}
+                shape={({ index, ...props }: BarShapeProps) =>
+                  index === ACTIVE_INDEX ? (
+                    <Rectangle
+                      {...props}
+                      fillOpacity={0.8}
+                      stroke={typeof props.fill === 'string' ? props.fill : 'var(--foreground)'}
+                      strokeWidth={2}
+                      strokeDasharray={4}
+                      strokeDashoffset={4}
+                    />
+                  ) : (
+                    <Rectangle {...props} />
+                  )
+                }
+              >
+                {categoryStats.map((entry) => (
+                  <Cell key={entry.key} fill={`var(--color-${entry.key})`} />
                 ))}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
       </Card>
 
-      {/* Status Chart */}
-      <Card>
+      <Card className="rounded-2xl">
         <CardHeader>
           <CardTitle>สถิติตามสถานะ</CardTitle>
           <CardDescription>สัดส่วนของรายการตามสถานะปัจจุบัน</CardDescription>
         </CardHeader>
         <CardContent className="h-75">
-          <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer config={statusChartConfig} className="h-full w-full">
             <PieChart>
               <Pie
                 data={statusStats}
                 cx="50%"
                 cy="50%"
+                nameKey="status"
                 labelLine={false}
-                label={({ payload, percent }: any) =>
-                  percent && percent > 0 ? `${payload.status}: ${(percent * 100).toFixed(0)}%` : ''
-                }
                 outerRadius={80}
-                fill="#8884d8"
                 dataKey="count"
+                strokeWidth={4}
               >
-                {statusStats.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS.status[index % COLORS.status.length]} />
+                {statusStats.map((entry) => (
+                  <Cell key={entry.key} fill={`var(--color-${entry.key})`} />
                 ))}
               </Pie>
-              <Tooltip />
+              <ChartTooltip content={<ChartTooltipContent nameKey="status" hideLabel />} />
+              <ChartLegend
+                content={<ChartLegendContent nameKey="status" className="flex-wrap gap-2" />}
+              />
             </PieChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
       </Card>
     </div>
