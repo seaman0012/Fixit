@@ -228,10 +228,9 @@ export default async function AdminTicketDetailPage({
                 </div>
               </div>
 
-              <Separator />
-
               {ticket.completed_at && (
                 <>
+                  <Separator />
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="text-muted-foreground h-4 w-4" />
                     <div>
