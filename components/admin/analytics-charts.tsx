@@ -19,6 +19,9 @@ interface AnalyticsChartsProps {
 
 type BarShapeProps = ComponentProps<typeof Rectangle> & {
   index?: number
+  payload?: {
+    key?: string
+  }
 }
 
 const categoryChartConfig = {
@@ -99,23 +102,29 @@ export default function AnalyticsCharts({ categoryStats, statusStats }: Analytic
               <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
               <Bar
                 dataKey="count"
-                fill="var(--color-electrical)"
                 strokeWidth={2}
                 radius={8}
-                shape={({ index, ...props }: BarShapeProps) =>
-                  index === ACTIVE_INDEX ? (
+                shape={({ index, payload, ...props }: BarShapeProps) => {
+                  const fillColor = payload?.key
+                    ? `var(--color-${payload.key})`
+                    : typeof props.fill === 'string'
+                      ? props.fill
+                      : 'var(--chart-1)'
+
+                  return index === ACTIVE_INDEX ? (
                     <Rectangle
                       {...props}
+                      fill={fillColor}
                       fillOpacity={0.8}
-                      stroke={typeof props.fill === 'string' ? props.fill : 'var(--foreground)'}
+                      stroke={fillColor}
                       strokeWidth={2}
                       strokeDasharray={4}
                       strokeDashoffset={4}
                     />
                   ) : (
-                    <Rectangle {...props} />
+                    <Rectangle {...props} fill={fillColor} />
                   )
-                }
+                }}
               />
             </BarChart>
           </ChartContainer>
