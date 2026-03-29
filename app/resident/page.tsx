@@ -23,7 +23,7 @@ export default async function ResidentPage() {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/login')
+    redirect('/auth/login')
   }
 
   const { data: tickets } = await supabase

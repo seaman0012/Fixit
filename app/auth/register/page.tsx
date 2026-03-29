@@ -215,7 +215,7 @@ export default function RegisterPage() {
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               มีบัญชีอยู่แล้ว?{' '}
-              <Link href="/login" className="text-primary font-medium hover:underline">
+              <Link href="/auth/login" className="text-primary font-medium hover:underline">
                 เข้าสู่ระบบ
               </Link>
             </p>
