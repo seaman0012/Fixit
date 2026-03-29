@@ -1,8 +1,17 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import AnalyticsCharts from '@/components/admin/analytics-charts'
 import { categoryConfig } from '@/lib/constants'
+import { ChartColumnIncreasing, Clock3, FileText, Wrench } from 'lucide-react'
 
 export default async function AnalyticsPage() {
   const supabase = await createServerSupabaseClient()
@@ -68,78 +77,87 @@ export default async function AnalyticsPage() {
 
   const avgDays = Math.floor(avgCompletionTime / (1000 * 60 * 60 * 24))
   const avgHours = Math.floor((avgCompletionTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+  const completionRate =
+    tickets.length > 0 ? ((completedTickets.length / tickets.length) * 100).toFixed(1) : '0.0'
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="@container/main flex flex-col gap-6">
       <div>
         <h1 className="text-3xl font-bold">วิเคราะห์ข้อมูล</h1>
-        <p className="text-muted-foreground">ข้อมูลสถิติและการวิเคราะห์เพื่อการจัดการ</p>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          ข้อมูลสถิติและแนวโน้มเพื่อช่วยวางแผนการดูแลหอพัก
+        </p>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="*:from-primary/5 *:to-card grid grid-cols-1 gap-4 *:bg-linear-to-t *:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">รายการทั้งหมด</CardTitle>
+          <CardHeader>
+            <CardDescription>รายการทั้งหมด</CardDescription>
+            <CardTitle className="text-3xl font-semibold">{tickets.length}</CardTitle>
+            <CardAction>
+              <FileText className="text-muted-foreground size-4" />
+            </CardAction>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{tickets.length}</div>
-            <p className="text-muted-foreground text-xs">รายการแจ้งซ่อมทั้งหมด</p>
-          </CardContent>
+          <CardFooter>
+            <p className="text-muted-foreground text-xs">รายการแจ้งซ่อมสะสมทั้งหมด</p>
+          </CardFooter>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ซ่อมเสร็จแล้ว</CardTitle>
+          <CardHeader>
+            <CardDescription>ซ่อมเสร็จแล้ว</CardDescription>
+            <CardTitle className="text-3xl font-semibold">{completedTickets.length}</CardTitle>
+            <CardAction>
+              <ChartColumnIncreasing className="size-4 text-green-600" />
+            </CardAction>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{completedTickets.length}</div>
-            <p className="text-muted-foreground text-xs">
-              {tickets.length > 0
-                ? `${((completedTickets.length / tickets.length) * 100).toFixed(1)}% ของทั้งหมด`
-                : 'ไม่มีข้อมูล'}
-            </p>
-          </CardContent>
+          <CardFooter>
+            <p className="text-muted-foreground text-xs">คิดเป็น {completionRate}% ของทั้งหมด</p>
+          </CardFooter>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">เวลาเฉลี่ยในการซ่อม</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardHeader>
+            <CardDescription>เวลาเฉลี่ยในการซ่อม</CardDescription>
+            <CardTitle className="text-3xl font-semibold">
               {avgDays > 0 ? `${avgDays} วัน` : `${avgHours} ชม.`}
-            </div>
-            <p className="text-muted-foreground text-xs">จากสร้างถึงเสร็จสิ้น</p>
-          </CardContent>
+            </CardTitle>
+            <CardAction>
+              <Clock3 className="size-4 text-blue-600" />
+            </CardAction>
+          </CardHeader>
+          <CardFooter>
+            <p className="text-muted-foreground text-xs">นับตั้งแต่สร้างงานถึงปิดงาน</p>
+          </CardFooter>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">ประเภทที่เสียบ่อยที่สุด</CardTitle>
+          <CardHeader>
+            <CardDescription>ประเภทที่เสียบ่อยที่สุด</CardDescription>
+            <CardTitle className="text-2xl font-semibold">
+              {topCategories[0]?.category || 'N/A'}
+            </CardTitle>
+            <CardAction>
+              <Wrench className="size-4 text-amber-600" />
+            </CardAction>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{topCategories[0]?.category || 'N/A'}</div>
+          <CardFooter>
             <p className="text-muted-foreground text-xs">{topCategories[0]?.count || 0} รายการ</p>
-          </CardContent>
+          </CardFooter>
         </Card>
       </div>
 
-      {/* Charts */}
       <AnalyticsCharts categoryStats={categoryStats} statusStats={statusStats} />
 
-      {/* Top Lists */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Top Categories */}
-        <Card>
+        <Card className="rounded-2xl">
           <CardHeader>
             <CardTitle>ประเภทที่พบบ่อยที่สุด</CardTitle>
             <CardDescription>สถิติอุปกรณ์ที่เสียบ่อย</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               {topCategories.map((item, index) => (
                 <div key={item.category} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="w-8 justify-center">
+                    <Badge variant="outline" className="w-8 justify-center rounded-md">
                       {index + 1}
                     </Badge>
                     <span className="font-medium">{item.category}</span>
@@ -161,18 +179,17 @@ export default async function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Top Rooms */}
-        <Card>
+        <Card className="rounded-2xl">
           <CardHeader>
             <CardTitle>ห้องที่แจ้งบ่อยที่สุด</CardTitle>
             <CardDescription>ห้องที่มีปัญหาบ่อย</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               {topRooms.slice(0, 5).map((item, index) => (
                 <div key={item.room} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="w-8 justify-center">
+                    <Badge variant="outline" className="w-8 justify-center rounded-md">
                       {index + 1}
                     </Badge>
                     <span className="font-medium">ห้อง {item.room}</span>

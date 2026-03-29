@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Loader2, Save } from 'lucide-react'
 
 const statusOptions = [
@@ -74,52 +75,63 @@ export default function StatusUpdateForm({ ticket }: StatusUpdateFormProps) {
   }
 
   return (
-    <Card>
+    <Card className="rounded-2xl">
       <CardHeader>
         <CardTitle>อัปเดตสถานะ</CardTitle>
         <CardDescription>เปลี่ยนสถานะของรายการแจ้งซ่อมตามความคืบหน้า</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         {error && (
-          <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">{error}</div>
+          <div className="bg-destructive/10 text-destructive mb-4 rounded-md p-3 text-sm">
+            {error}
+          </div>
         )}
         {success && (
-          <div className="rounded-md bg-green-500/10 p-3 text-sm text-green-600">
+          <div className="mb-4 rounded-md bg-green-500/10 p-3 text-sm text-green-600">
             อัปเดตสถานะสำเร็จ!
           </div>
         )}
-        <div className="space-y-2">
-          <Label htmlFor="status">สถานะ</Label>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger id="status">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Button
-          onClick={handleUpdate}
-          disabled={loading || status === ticket.status}
-          className="w-full"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              กำลังอัปเดต...
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              บันทึกการเปลี่ยนแปลง
-            </>
-          )}
-        </Button>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="status">สถานะ</FieldLabel>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger id="status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <FieldDescription className="text-muted-foreground text-xs">
+              การเปลี่ยนเป็น &quot;เสร็จสิ้น&quot; จะบันทึกเวลาเสร็จงานอัตโนมัติ
+            </FieldDescription>
+          </Field>
+          <Field>
+            <Button
+              onClick={handleUpdate}
+              disabled={loading || status === ticket.status}
+              className="w-full"
+            >
+              {loading ? (
+                <>
+                  <Loader2 data-icon="inline-start" className="animate-spin" />
+                  กำลังอัปเดต...
+                </>
+              ) : (
+                <>
+                  <Save data-icon="inline-start" />
+                  บันทึกการเปลี่ยนแปลง
+                </>
+              )}
+            </Button>
+          </Field>
+        </FieldGroup>
       </CardContent>
     </Card>
   )

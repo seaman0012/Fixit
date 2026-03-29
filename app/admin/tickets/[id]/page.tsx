@@ -107,18 +107,26 @@ export default async function AdminTicketDetailPage({
   const StatusIcon = status.icon
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">{ticket.title}</h1>
-        <p className="text-muted-foreground">จัดการและอัปเดตสถานะรายการแจ้งซ่อม</p>
+    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+      <div className="bg-card relative overflow-hidden rounded-2xl border px-5 py-5 sm:px-6">
+        <div className="absolute inset-x-0 top-0 h-1" />
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{ticket.title}</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              จัดการข้อมูลและอัปเดตสถานะรายการแจ้งซ่อม
+            </p>
+          </div>
+          <Badge className={status.color}>
+            <StatusIcon className="mr-1 h-3 w-3" />
+            {status.label}
+          </Badge>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Main Content */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Ticket Details */}
-          <Card>
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <Card className="rounded-2xl">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
@@ -128,13 +136,9 @@ export default async function AdminTicketDetailPage({
                     {format(new Date(ticket.created_at!), 'd MMMM yyyy, HH:mm น.', { locale: th })}
                   </CardDescription>
                 </div>
-                <Badge className={status.color}>
-                  <StatusIcon className="mr-1 h-3 w-3" />
-                  {status.label}
-                </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <div>
                 <h3 className="mb-2 font-medium">คำอธิบาย</h3>
                 <p className="text-muted-foreground whitespace-pre-wrap">{ticket.description}</p>
@@ -150,7 +154,7 @@ export default async function AdminTicketDetailPage({
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="relative aspect-square overflow-hidden rounded-lg border"
+                        className="relative aspect-square overflow-hidden rounded-xl border"
                       >
                         <Image
                           src={url}
@@ -167,21 +171,17 @@ export default async function AdminTicketDetailPage({
             </CardContent>
           </Card>
 
-          {/* Status Update Form */}
           <StatusUpdateForm ticket={ticket} />
 
-          {/* Comments */}
           <CommentSection ticketId={id} initialComments={comments} userRole="admin" />
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Resident Info */}
-          <Card>
+        <div className="flex flex-col gap-6">
+          <Card className="rounded-2xl">
             <CardHeader>
               <CardTitle className="text-lg">ผู้แจ้ง</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 <User className="text-muted-foreground h-4 w-4" />
                 <div>
@@ -219,12 +219,11 @@ export default async function AdminTicketDetailPage({
             </CardContent>
           </Card>
 
-          {/* Ticket Info */}
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader>
               <CardTitle className="text-lg">ข้อมูลเพิ่มเติม</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 <AlertCircle className="text-muted-foreground h-4 w-4" />
                 <div>

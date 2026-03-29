@@ -1,27 +1,20 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Input } from '@/components/ui/input'
-import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
-import { th } from 'date-fns/locale'
-import { Search } from 'lucide-react'
-import { statusConfig, categoryConfig } from '@/lib/constants'
+import { DataTable } from '@/components/ui/data-table'
+import type { DataTableTicket } from '@/components/ui/data-table'
 
-export default async function AdminTicketsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string; search?: string }>
-}) {
-  const { status, search } = await searchParams
+export default async function AdminTicketsPage() {
   const supabase = await createServerSupabaseClient()
 
-  const statusFilter = status || 'all'
-  const searchQuery = search || ''
-
-  // ดึงข้อมูล tickets
-  let query = supabase
+  const { data: tickets } = await supabase
     .from('tickets')
     .select(
       `
@@ -37,118 +30,60 @@ export default async function AdminTicketsPage({
     )
     .order('created_at', { ascending: false })
 
-  if (statusFilter !== 'all') {
-    query = query.eq('status', statusFilter)
-  }
-
-  const { data: tickets } = await query
-
-  // Filter by search query
-  const filteredTickets = tickets?.filter((ticket: any) => {
-    if (!searchQuery) return true
-    const search = searchQuery.toLowerCase()
-    return (
-      ticket.title.toLowerCase().includes(search) ||
-      ticket.description.toLowerCase().includes(search) ||
-      ticket.rooms?.room_number?.toLowerCase().includes(search) ||
-      ticket.profiles?.full_name?.toLowerCase().includes(search)
+  const tableTickets: DataTableTicket[] = (tickets ?? [])
+    .filter(
+      (ticket): ticket is typeof ticket & { created_at: string } => ticket.created_at !== null
     )
-  })
+    .map((ticket) => ({
+      id: ticket.id,
+      title: ticket.title,
+      description: ticket.description,
+      category: ticket.category,
+      status: ticket.status,
+      created_at: ticket.created_at,
+      rooms: ticket.rooms,
+      profiles: ticket.profiles,
+    }))
 
-  const renderTickets = (ticketList: typeof tickets | undefined) => {
-    if (!ticketList || ticketList.length === 0) {
-      return <div className="text-muted-foreground py-12 text-center">ไม่พบรายการแจ้งซ่อม</div>
-    }
-
-    return (
-      <div className="space-y-4">
-        {ticketList.map((ticket: any) => {
-          const status = statusConfig[ticket.status as keyof typeof statusConfig]
-          const StatusIcon = status.icon
-
-          return (
-            <Link key={ticket.id} href={`/admin/tickets/${ticket.id}`} className="block">
-              <div className="hover:bg-muted/50 flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors">
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium">{ticket.title}</h3>
-                    <Badge variant="secondary" className="text-xs">
-                      {categoryConfig[ticket.category as keyof typeof categoryConfig]}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground line-clamp-2 text-sm">{ticket.description}</p>
-                  <div className="text-muted-foreground flex items-center gap-4 text-xs">
-                    <span>{ticket.profiles?.full_name || 'Unknown'}</span>
-                    <span>ห้อง {ticket.rooms?.room_number || '-'}</span>
-                    {ticket.profiles?.phone && <span>โทร: {ticket.profiles.phone}</span>}
-                    <span>
-                      {formatDistanceToNow(new Date(ticket.created_at), {
-                        addSuffix: true,
-                        locale: th,
-                      })}
-                    </span>
-                  </div>
-                </div>
-                <Badge className={status.color}>
-                  <StatusIcon className="mr-1 h-3 w-3" />
-                  {status.label}
-                </Badge>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
-    )
-  }
+  const pendingCount = tickets?.filter((ticket: any) => ticket.status === 'pending').length || 0
+  const inProgressCount =
+    tickets?.filter((ticket: any) => ticket.status === 'in_progress').length || 0
+  const completedCount = tickets?.filter((ticket: any) => ticket.status === 'completed').length || 0
+  const cancelledCount = tickets?.filter((ticket: any) => ticket.status === 'cancelled').length || 0
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-bold">จัดการงาน</h1>
-        <p className="text-muted-foreground">จัดการและอัปเดตสถานะรายการแจ้งซ่อม</p>
+        <h1 className="text-3xl font-bold">รายการแจ้งซ่อมทั้งหมด</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          ค้นหาและจัดการสถานะงานซ่อมของทุกห้องในระบบ
+        </p>
       </div>
 
-      <Card>
+      <Card className="rounded-2xl">
         <CardHeader>
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <CardTitle>รายการแจ้งซ่อมทั้งหมด</CardTitle>
-              <CardDescription>คลิกที่รายการเพื่ออัปเดตสถานะและให้ข้อมูลเพิ่มเติม</CardDescription>
-            </div>
-            <div className="relative w-full max-w-sm">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-              <Input
-                type="search"
-                placeholder="ค้นหา..."
-                defaultValue={searchQuery}
-                className="pl-9"
-              />
-            </div>
-          </div>
+          <CardTitle>ตารางงานซ่อม</CardTitle>
+          <CardDescription>
+            คลิกที่หัวข้อรายการเพื่อเข้าไปอัปเดตสถานะและติดตามคอมเมนต์
+          </CardDescription>
+          <CardAction className="flex flex-wrap gap-2">
+            <Badge variant="outline">รอดำเนินการ {pendingCount}</Badge>
+            <Badge variant="outline">กำลังดำเนินการ {inProgressCount}</Badge>
+            <Badge variant="outline">เสร็จสิ้น {completedCount}</Badge>
+            <Badge variant="outline">ยกเลิก {cancelledCount}</Badge>
+          </CardAction>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={statusFilter} className="w-full bg-amber-300">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all" asChild>
-                <Link href="/admin/tickets?status=all">ทั้งหมด</Link>
-              </TabsTrigger>
-              <TabsTrigger value="pending" asChild>
-                <Link href="/admin/tickets?status=pending">รอดำเนินการ</Link>
-              </TabsTrigger>
-              <TabsTrigger value="in_progress" asChild>
-                <Link href="/admin/tickets?status=in_progress">กำลังดำเนินการ</Link>
-              </TabsTrigger>
-              <TabsTrigger value="completed" asChild>
-                <Link href="/admin/tickets?status=completed">เสร็จสิ้น</Link>
-              </TabsTrigger>
-              <TabsTrigger value="cancelled" asChild>
-                <Link href="/admin/tickets?status=cancelled">ยกเลิก</Link>
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value={statusFilter} className="mt-6">
-              {renderTickets(filteredTickets)}
-            </TabsContent>
-          </Tabs>
+          <DataTable
+            tickets={tableTickets}
+            detailBasePath="/admin/tickets"
+            pageSize={12}
+            showReporter
+            showSearch
+            showPagination
+            showStatusFilter
+            showViewAllButton={false}
+          />
         </CardContent>
       </Card>
     </div>
