@@ -4,22 +4,22 @@ import { Clock, CheckCircle2, AlertCircle, Loader } from 'lucide-react'
 export const statusConfig = {
   pending: {
     label: 'รอดำเนินการ',
-    color: 'text-yellow-800',
+    color: 'text-muted-foreground',
     icon: Clock,
   },
   in_progress: {
     label: 'กำลังดำเนินการ',
-    color: 'text-blue-800',
+    color: 'text-blue-500 dark:text-blue-400',
     icon: Loader,
   },
   completed: {
     label: 'เสร็จสิ้น',
-    color: 'text-green-400',
+    color: 'text-white dark:text-background fill-green-500  dark:fill-green-400',
     icon: CheckCircle2,
   },
   cancelled: {
     label: 'ยกเลิก',
-    color: 'text-red-500',
+    color: 'text-white dark:text-background fill-red-500  dark:fill-red-400',
     icon: AlertCircle,
   },
 } as const
