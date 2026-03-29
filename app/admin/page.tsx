@@ -124,7 +124,7 @@ export default async function AdminDashboard() {
       <Card className="rounded-2xl">
         <CardHeader>
           <CardTitle className="text-2xl">รายการแจ้งซ่อมล่าสุด</CardTitle>
-          <CardDescription>แสดง 10 รายการล่าสุด</CardDescription>
+          <CardDescription>แสดง 5 รายการล่าสุด</CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable
@@ -135,7 +135,7 @@ export default async function AdminDashboard() {
             showSearch={false}
             showPagination={false}
             showStatusFilter={false}
-            showViewAllButton
+            showViewAllButton={false}
           />
         </CardContent>
       </Card>

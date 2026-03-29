@@ -1,10 +1,17 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { AlertCircle, CheckCircle2, MapPin, User, Phone } from 'lucide-react'
+import { AlertCircle, CheckCircle2, MapPin, User, Phone, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { th } from 'date-fns/locale'
 import Image from 'next/image'
@@ -108,35 +115,22 @@ export default async function AdminTicketDetailPage({
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6">
-      <div className="bg-card relative overflow-hidden rounded-2xl border px-5 py-5 sm:px-6">
-        <div className="absolute inset-x-0 top-0 h-1" />
-        <div className="relative flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{ticket.title}</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              จัดการข้อมูลและอัปเดตสถานะรายการแจ้งซ่อม
-            </p>
-          </div>
-          <Badge className={status.color}>
-            <StatusIcon className="mr-1 h-3 w-3" />
-            {status.label}
-          </Badge>
-        </div>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-6 lg:col-span-2">
           <Card className="rounded-2xl">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <CardTitle>รายละเอียด</CardTitle>
-                  <CardDescription>
-                    สร้างเมื่อ{' '}
-                    {format(new Date(ticket.created_at!), 'd MMMM yyyy, HH:mm น.', { locale: th })}
-                  </CardDescription>
-                </div>
-              </div>
+            <CardHeader className="gap-4">
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{ticket.title}</h1>
+              <CardTitle>รายละเอียด</CardTitle>
+              <CardDescription>
+                สร้างเมื่อ{' '}
+                {format(new Date(ticket.created_at!), 'd MMMM yyyy, HH:mm น.', { locale: th })}
+              </CardDescription>
+              <CardAction>
+                <Badge variant="outline" className="text-muted-foreground">
+                  <StatusIcon className={status.color} />
+                  {status.label}
+                </Badge>
+              </CardAction>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
               <div>
@@ -250,6 +244,61 @@ export default async function AdminTicketDetailPage({
                     </div>
                   </div>
                 </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">ไทม์ไลน์</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              <div className="flex gap-4">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-full">
+                    <Calendar className="text-primary-foreground h-4 w-4" />
+                  </div>
+                  <div className="bg-primary/20 h-6 w-0.5 flex-auto" />
+                </div>
+                <div className="pb-4">
+                  <p className="text-sm font-medium">สร้างรายการ</p>
+                  <p className="text-muted-foreground text-xs">
+                    {format(new Date(ticket.created_at!), 'd MMM yyyy, HH:mm', { locale: th })}
+                  </p>
+                </div>
+              </div>
+
+              {ticket.status !== 'pending' && (
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500">
+                      <AlertCircle className="h-4 w-4 text-white" />
+                    </div>
+                    {ticket.status !== 'in_progress' && (
+                      <div className="bg-primary/20 h-6 w-0.5 flex-auto" />
+                    )}
+                  </div>
+                  <div className={ticket.status === 'in_progress' ? '' : 'pb-4'}>
+                    <p className="text-sm font-medium">เริ่มดำเนินการ</p>
+                    <p className="text-muted-foreground text-xs">
+                      {format(new Date(ticket.updated_at!), 'd MMM yyyy, HH:mm', { locale: th })}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {ticket.completed_at && (
+                <div className="flex gap-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500">
+                    <CheckCircle2 className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">เสร็จสิ้น</p>
+                    <p className="text-muted-foreground text-xs">
+                      {format(new Date(ticket.completed_at), 'd MMM yyyy, HH:mm', { locale: th })}
+                    </p>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>

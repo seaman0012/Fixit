@@ -123,16 +123,15 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">{(ticket as any).title}</h1>
-      </div>
+      <div></div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Content */}
         <div className="space-y-6 lg:col-span-2">
           {/* Ticket Details */}
           <Card>
-            <CardHeader>
+            <CardHeader className="gap-4">
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{ticket.title}</h1>
               <CardTitle>รายละเอียด</CardTitle>
               <CardDescription>
                 สร้างเมื่อ{' '}

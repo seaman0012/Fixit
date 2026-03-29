@@ -171,9 +171,9 @@ export default function CommentSection({
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Comments List */}
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {comments.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center text-sm">ยังไม่มีความคิดเห็น</p>
+            <p className="text-muted-foreground py-4 text-center text-sm">ยังไม่มีความคิดเห็น</p>
           ) : (
             comments.map((comment) => (
               <div key={comment.id} className="flex gap-3">
