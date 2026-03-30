@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Wrench, LayoutDashboard, FileText, BarChart3, LogOut } from 'lucide-react'
+import { LayoutDashboard, FileText, BarChart3, LogOut } from 'lucide-react'
 import Image from 'next/image'
 
 interface AdminNavProps {
@@ -44,13 +44,13 @@ export default function AdminNav({ profile }: AdminNavProps) {
   }
 
   return (
-    <nav className="bg-background border-b">
+    <nav className="bg-background shadow-2sm border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link href="/admin" className="flex items-center gap-2">
+          <Link href="/admin" className="flex items-center gap-4">
             <div className="relative h-8 w-8 overflow-hidden rounded">
               <Image
-                src="/fixit-icon-light.svg"
+                src="/fixit-icon-circle-light.svg"
                 alt="Fixit logo"
                 fill
                 sizes="32px"
@@ -58,7 +58,7 @@ export default function AdminNav({ profile }: AdminNavProps) {
                 className="object-contain dark:hidden"
               />
               <Image
-                src="/fixit-icon-dark.svg"
+                src="/fixit-icon-circle-dark.svg"
                 alt="Fixit logo"
                 fill
                 sizes="32px"
@@ -66,24 +66,21 @@ export default function AdminNav({ profile }: AdminNavProps) {
                 className="hidden object-contain dark:block"
               />
             </div>
-            <span className="text-xl font-bold">Fixit Admin</span>
+            <span className="hidden text-xl font-bold sm:flex">Fixit Admin</span>
           </Link>
           <div className="hidden items-center gap-4 md:flex">
             <Link href="/admin">
               <Button variant="ghost" size="sm">
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Dashboard
+                หน้าหลัก
               </Button>
             </Link>
             <Link href="/admin/tickets">
               <Button variant="ghost" size="sm">
-                <FileText className="mr-2 h-4 w-4" />
                 จัดการงาน
               </Button>
             </Link>
             <Link href="/admin/analytics">
               <Button variant="ghost" size="sm">
-                <BarChart3 className="mr-2 h-4 w-4" />
                 วิเคราะห์ข้อมูล
               </Button>
             </Link>
@@ -110,6 +107,25 @@ export default function AdminNav({ profile }: AdminNavProps) {
                   <p className="text-muted-foreground text-xs">{profile.email}</p>
                 </div>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator className="md:hidden" />
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link href="/admin">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  หน้าหลัก
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link href="/admin/tickets">
+                  <FileText className="mr-2 h-4 w-4" />
+                  รายการทั้งหมด
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link href="/admin/analytics">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  วิเคราะห์ข้อมูล
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />

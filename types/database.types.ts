@@ -8,7 +8,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      comments: {
+      ticket_comments: {
         Row: {
           created_at: string | null
           id: string
@@ -32,14 +32,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'comments_ticket_id_fkey'
+            foreignKeyName: 'ticket_comments_ticket_id_fkey'
             columns: ['ticket_id']
             isOneToOne: false
             referencedRelation: 'tickets'
             referencedColumns: ['id']
           },
           {
-            foreignKeyName: 'comments_user_id_fkey'
+            foreignKeyName: 'ticket_comments_user_id_fkey'
             columns: ['user_id']
             isOneToOne: false
             referencedRelation: 'profiles'
@@ -55,7 +55,7 @@ export type Database = {
           id: string
           phone: string | null
           role: string
-          room_number: string | null
+          room_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -65,7 +65,7 @@ export type Database = {
           id: string
           phone?: string | null
           role: string
-          room_number?: string | null
+          room_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -75,8 +75,40 @@ export type Database = {
           id?: string
           phone?: string | null
           role?: string
-          room_number?: string | null
+          room_id?: string | null
           updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'profiles_room_id_fkey'
+            columns: ['room_id']
+            isOneToOne: false
+            referencedRelation: 'rooms'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          created_at: string
+          floor: string
+          id: string
+          room_number: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          floor: string
+          id?: string
+          room_number: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          floor?: string
+          id?: string
+          room_number?: string
+          status?: string
         }
         Relationships: []
       }
@@ -133,8 +165,7 @@ export type Database = {
           description: string
           id: string
           image_urls: string[] | null
-          priority: string | null
-          room_number: string
+          room_id: string
           status: string
           title: string
           updated_at: string | null
@@ -147,8 +178,7 @@ export type Database = {
           description: string
           id?: string
           image_urls?: string[] | null
-          priority?: string | null
-          room_number: string
+          room_id: string
           status?: string
           title: string
           updated_at?: string | null
@@ -161,14 +191,20 @@ export type Database = {
           description?: string
           id?: string
           image_urls?: string[] | null
-          priority?: string | null
-          room_number?: string
+          room_id?: string
           status?: string
           title?: string
           updated_at?: string | null
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'tickets_room_id_fkey'
+            columns: ['room_id']
+            isOneToOne: false
+            referencedRelation: 'rooms'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'tickets_user_id_fkey'
             columns: ['user_id']

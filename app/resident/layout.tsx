@@ -1,21 +1,28 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import ResidentNav from '@/components/resident/resident-nav'
 
 export default async function ResidentLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createClient()
 
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/login')
+    redirect('/auth/login')
   }
 
   const { data: profile } = (await supabase
     .from('profiles')
-    .select('*')
+    .select(
+      `
+      *,
+      rooms:room_id (
+        room_number
+      )
+    `
+    )
     .eq('id', user.id)
     .single()) as { data: any }
 

@@ -30,7 +30,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -66,11 +66,51 @@ export default function RegisterPage() {
       if (signUpError) throw signUpError
 
       if (data.user) {
+        let roomId: string | null = null
+
+        const normalizedRoomNumber = formData.roomNumber.trim()
+        if (normalizedRoomNumber) {
+          const { data: existingRoom, error: existingRoomError } = await supabase
+            .from('rooms')
+            .select('id')
+            .eq('room_number', normalizedRoomNumber)
+            .maybeSingle()
+
+          if (existingRoomError) throw existingRoomError
+
+          if (existingRoom) {
+            roomId = existingRoom.id
+          } else {
+            const { data: createdRoom, error: createRoomError } = await supabase
+              .from('rooms')
+              .insert({
+                room_number: normalizedRoomNumber,
+                floor: 'unknown',
+                status: 'occupied',
+              })
+              .select('id')
+              .single()
+
+            if (createRoomError) {
+              const { data: retryRoom, error: retryRoomError } = await supabase
+                .from('rooms')
+                .select('id')
+                .eq('room_number', normalizedRoomNumber)
+                .single()
+
+              if (retryRoomError) throw createRoomError
+              roomId = retryRoom.id
+            } else {
+              roomId = createdRoom.id
+            }
+          }
+        }
+
         // อัปเดตข้อมูล profile เพิ่มเติม
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
-            room_number: formData.roomNumber,
+            room_id: roomId,
             phone: formData.phone,
           })
           .eq('id', data.user.id)
@@ -175,7 +215,7 @@ export default function RegisterPage() {
             </Button>
             <p className="text-muted-foreground text-center text-sm">
               มีบัญชีอยู่แล้ว?{' '}
-              <Link href="/login" className="text-primary font-medium hover:underline">
+              <Link href="/auth/login" className="text-primary font-medium hover:underline">
                 เข้าสู่ระบบ
               </Link>
             </p>
