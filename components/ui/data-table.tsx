@@ -42,9 +42,12 @@ export type DataTableTicket = {
   id: string
   title: string
   description: string | null
-  category: string
+  category: string | null
   status: string
   created_at: string
+  categories?: {
+    name: string
+  } | null
   rooms?: {
     room_number: string
   } | null
@@ -119,11 +122,17 @@ export function DataTable({
         accessorKey: 'category',
         size: 120,
         header: 'หมวดหมู่',
-        cell: ({ row }) => (
-          <Badge variant="outline" className="px-1.5">
-            {categoryConfig[row.original.category as keyof typeof categoryConfig]}
-          </Badge>
-        ),
+        cell: ({ row }) => {
+          const categoryKey = row.original.categories?.name || row.original.category
+          const categoryLabel = categoryKey
+            ? categoryConfig[categoryKey as keyof typeof categoryConfig]
+            : 'N/A'
+          return (
+            <Badge variant="outline" className="px-1.5">
+              {categoryLabel}
+            </Badge>
+          )
+        },
       },
       {
         accessorKey: 'status',

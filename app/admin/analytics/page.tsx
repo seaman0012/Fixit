@@ -24,6 +24,9 @@ export default async function AnalyticsPage() {
       *,
       rooms:room_id (
         room_number
+      ),
+      categories:category_id (
+        name
       )
     `
     )
@@ -35,7 +38,10 @@ export default async function AnalyticsPage() {
 
   // วิเคราะห์ข้อมูล
   const categoryStats = Object.entries(categoryConfig).map(([key, label]) => {
-    const count = tickets.filter((ticket: any) => ticket.category === key).length
+    const count = tickets.filter((ticket: any) => {
+      const categoryName = ticket.categories?.name || ticket.category
+      return categoryName === key
+    }).length
     return { key, category: label, count }
   })
 

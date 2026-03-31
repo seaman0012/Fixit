@@ -33,6 +33,9 @@ export default async function ResidentPage() {
       *,
       rooms:room_id (
         room_number
+      ),
+      categories:category_id (
+        name
       )
     `
     )
@@ -50,6 +53,7 @@ export default async function ResidentPage() {
       category: ticket.category,
       status: ticket.status,
       created_at: ticket.created_at,
+      categories: ticket.categories,
       rooms: ticket.rooms,
     }))
 

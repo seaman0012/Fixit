@@ -77,6 +77,9 @@ export default async function AdminTicketDetailPage({
         full_name,
         email,
         phone
+      ),
+      categories:category_id (
+        name
       )
     `
     )
@@ -226,7 +229,10 @@ export default async function AdminTicketDetailPage({
                 <div>
                   <p className="text-sm font-medium">ประเภท</p>
                   <p className="text-muted-foreground text-sm">
-                    {categoryConfig[ticket.category as keyof typeof categoryConfig]}
+                    {categoryConfig[
+                      ((ticket as any).categories?.name ||
+                        (ticket as any).category) as keyof typeof categoryConfig
+                    ] || 'N/A'}
                   </p>
                 </div>
               </div>

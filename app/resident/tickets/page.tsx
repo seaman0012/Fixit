@@ -32,6 +32,9 @@ export default async function TicketsPage() {
       *,
       rooms:room_id (
         room_number
+      ),
+      categories:category_id (
+        name
       )
     `
     )
@@ -49,6 +52,7 @@ export default async function TicketsPage() {
       category: ticket.category,
       status: ticket.status,
       created_at: ticket.created_at,
+      categories: ticket.categories,
       rooms: ticket.rooms,
     }))
 
