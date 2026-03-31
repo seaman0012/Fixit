@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LayoutDashboard, FileText, BarChart3, LogOut } from 'lucide-react'
+import { LayoutDashboard, FileText, BarChart3, Building2, UsersRound, LogOut } from 'lucide-react'
 import Image from 'next/image'
 
 interface AdminNavProps {
@@ -76,12 +76,23 @@ export default function AdminNav({ profile }: AdminNavProps) {
             </Link>
             <Link href="/admin/tickets">
               <Button variant="ghost" size="sm">
-                จัดการงาน
+                รายการทั้งหมด
               </Button>
             </Link>
             <Link href="/admin/analytics">
               <Button variant="ghost" size="sm">
                 วิเคราะห์ข้อมูล
+              </Button>
+            </Link>
+
+            <Link href="/admin/rooms">
+              <Button variant="ghost" size="sm">
+                จัดการห้อง
+              </Button>
+            </Link>
+            <Link href="/admin/users">
+              <Button variant="ghost" size="sm">
+                จัดการผู้ใช้
               </Button>
             </Link>
           </div>
@@ -124,6 +135,19 @@ export default function AdminNav({ profile }: AdminNavProps) {
                 <Link href="/admin/analytics">
                   <BarChart3 className="mr-2 h-4 w-4" />
                   วิเคราะห์ข้อมูล
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="md:hidden" />
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link href="/admin/rooms">
+                  <Building2 className="mr-2 h-4 w-4" />
+                  จัดการห้อง
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="md:hidden">
+                <Link href="/admin/users">
+                  <UsersRound className="mr-2 h-4 w-4" />
+                  จัดการผู้ใช้
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

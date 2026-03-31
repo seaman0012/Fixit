@@ -56,11 +56,14 @@ export async function updateSession(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, is_active')
       .eq('id', user.id)
       .single()
 
-    if (profile?.role === 'admin') {
+    if (profile && !profile.is_active) {
+      url.pathname = '/auth/error'
+      url.searchParams.set('error', 'account_suspended')
+    } else if (profile?.role === 'admin') {
       url.pathname = '/admin'
     } else {
       url.pathname = '/resident'

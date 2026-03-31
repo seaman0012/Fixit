@@ -26,6 +26,9 @@ export default async function AdminTicketsPage() {
       profiles:user_id (
         full_name,
         phone
+      ),
+      categories:category_id (
+        name
       )
     `
     )
@@ -42,6 +45,7 @@ export default async function AdminTicketsPage() {
       category: ticket.category,
       status: ticket.status,
       created_at: ticket.created_at,
+      categories: ticket.categories,
       rooms: ticket.rooms,
       profiles: ticket.profiles,
     }))
@@ -53,15 +57,12 @@ export default async function AdminTicketsPage() {
   const cancelledCount = tickets?.filter((ticket: any) => ticket.status === 'cancelled').length || 0
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-3xl font-bold">รายการแจ้งซ่อมทั้งหมด</h1>
-      </div>
-
+    <div className="@container/main flex flex-col gap-6">
+      <h1 className="text-3xl font-bold">รายการทั้งหมด</h1>
       <Card className="rounded-2xl">
         <CardHeader>
-          <CardTitle>ตารางงานซ่อม</CardTitle>
-          <CardDescription>หัวข้อรายการเพื่อเข้าไปอัปเดตสถานะและติดตามคอมเมนต์</CardDescription>
+          <CardTitle>สถานะของรายการทั้งหมด</CardTitle>
+          <CardDescription>เลือกหัวข้อรายการเพื่อดูรายละเอียด</CardDescription>
           <CardAction className="flex flex-wrap gap-2">
             <Badge variant="outline" className="text-muted-foreground">
               <Clock className="text-muted-foreground size-4" />
