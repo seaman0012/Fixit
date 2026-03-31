@@ -101,8 +101,8 @@ export function DataTable({
     const baseColumns: ColumnDef<DataTableTicket>[] = [
       {
         accessorKey: 'title',
-        size: 500,
-        header: () => <div className="w-full pl-2 text-left">หัวข้อ</div>,
+        size: 300,
+        header: 'หัวข้อ',
         cell: ({ row }) => (
           <div className="flex w-full flex-col gap-1 pl-2">
             <Link
@@ -118,9 +118,9 @@ export function DataTable({
       {
         accessorKey: 'category',
         size: 120,
-        header: () => <div className="w-full text-left">หมวดหมู่</div>,
+        header: 'หมวดหมู่',
         cell: ({ row }) => (
-          <Badge variant="outline" className="text-muted-foreground px-1.5">
+          <Badge variant="outline" className="px-1.5">
             {categoryConfig[row.original.category as keyof typeof categoryConfig]}
           </Badge>
         ),
@@ -128,7 +128,7 @@ export function DataTable({
       {
         accessorKey: 'status',
         size: 120,
-        header: () => <div className="w-full text-left">สถานะ</div>,
+        header: 'สถานะ',
         filterFn: (row, columnId, filterValue) => {
           if (!filterValue || filterValue === 'all') {
             return true
@@ -142,7 +142,7 @@ export function DataTable({
           const statusValue = row.original.status
 
           return (
-            <Badge variant="outline" className="text-muted-foreground px-1.5">
+            <Badge variant="outline" className="px-1.5">
               {statusValue === 'completed' ? (
                 <StatusIcon className="dark:text-background size-3 fill-green-500 text-white dark:fill-green-400" />
               ) : statusValue === 'cancelled' ? (
@@ -160,7 +160,7 @@ export function DataTable({
       {
         id: 'room',
         size: 80,
-        header: () => <div className="w-full text-left">ห้อง</div>,
+        header: 'ห้อง',
         cell: ({ row }) => <span>{row.original.rooms?.room_number || '-'}</span>,
       },
       {
@@ -193,7 +193,7 @@ export function DataTable({
     if (showReporter) {
       baseColumns.splice(3, 0, {
         id: 'reporter',
-        header: 'ผู้แจ้ง',
+        header: () => <div className="text-muted-foreground w-full text-left">ผู้แจ้ง</div>,
         cell: ({ row }) => (
           <div className="flex flex-col gap-0.5">
             <span>{row.original.profiles?.full_name || 'Unknown'}</span>
@@ -284,7 +284,7 @@ export function DataTable({
           ) : null}
         </div>
         {showSearch ? (
-          <InputGroup className="w-full max-w-3xs items-center">
+          <InputGroup className="w-full max-w-xs items-center">
             <InputGroupInput
               placeholder="ค้นหา..."
               value={searchQuery}
@@ -310,7 +310,11 @@ export function DataTable({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} style={{ width: header.getSize() }}>
+                  <TableHead
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className="text-muted-foreground"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}

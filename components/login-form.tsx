@@ -43,11 +43,17 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       if (data.user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, is_active')
           .eq('id', data.user.id)
           .single()
 
-        if (profile?.role === 'admin') {
+        if (profile && !profile.is_active) {
+          await supabase.auth.signOut()
+          setError('บัญชีนี้ถูกระงับการใช้งานชั่วคราว กรุณาติดต่อผู้ดูแลระบบ')
+          return
+        }
+
+        if (profile?.role === 'admin' || profile?.role === 'owner') {
           router.push('/admin')
         } else {
           router.push('/resident')

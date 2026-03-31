@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card'
 import { DataTable } from '@/components/ui/data-table'
 import type { DataTableTicket } from '@/components/ui/data-table'
-import { Clock, AlertCircle, CheckCircle2, FileText } from 'lucide-react'
+import { Clock, AlertCircle, CheckCircle2, FileText, Loader } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
@@ -56,20 +56,7 @@ export default async function AdminDashboard() {
 
   return (
     <div className="@container/main flex flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">หน้าหลักผู้ดูแล</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            ภาพรวมและรายการแจ้งซ่อมทั้งหมดในระบบ
-          </p>
-        </div>
-        <Link href="/admin/tickets">
-          <Button variant="outline" size="lg">
-            จัดการรายการทั้งหมด
-          </Button>
-        </Link>
-      </div>
-
+      <h1 className="text-3xl font-bold">หน้าหลัก</h1>
       <div className="*:from-primary/5 *:to-card grid grid-cols-1 gap-4 *:bg-linear-to-t *:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
         <Card>
           <CardHeader>
@@ -100,7 +87,7 @@ export default async function AdminDashboard() {
             <CardDescription>กำลังดำเนินการ</CardDescription>
             <CardTitle className="text-3xl font-semibold">{inProgressCount}</CardTitle>
             <CardAction>
-              <AlertCircle className="size-4 text-blue-600" />
+              <Loader className="size-4 text-blue-600" />
             </CardAction>
           </CardHeader>
           <CardFooter>
@@ -125,6 +112,11 @@ export default async function AdminDashboard() {
         <CardHeader>
           <CardTitle className="text-2xl">รายการแจ้งซ่อมล่าสุด</CardTitle>
           <CardDescription>แสดง 5 รายการล่าสุด</CardDescription>
+          <CardAction>
+            <Link href="/admin/tickets">
+              <Button variant="outline">ดูทั้งหมด</Button>
+            </Link>
+          </CardAction>
         </CardHeader>
         <CardContent>
           <DataTable
