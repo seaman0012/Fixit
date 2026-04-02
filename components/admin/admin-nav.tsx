@@ -45,28 +45,28 @@ export default function AdminNav({ profile }: AdminNavProps) {
 
   return (
     <nav className="bg-background shadow-2sm border-b">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-8">
-          <Link href="/admin" className="flex items-center gap-4">
-            <div className="relative h-8 w-8 overflow-hidden rounded">
+      <div className="container mx-auto flex h-16 flex-row items-center justify-between px-4">
+        <div className="flex items-center justify-between gap-8">
+          <Link href="/admin" className="flex w-fit items-center gap-4">
+            <div className="bg-foreground relative h-8 w-8 overflow-hidden rounded-md">
               <Image
-                src="/fixit-icon-circle-light.svg"
+                src="/fixit icon-dark.svg"
                 alt="Fixit logo"
                 fill
                 sizes="32px"
                 priority
-                className="object-contain dark:hidden"
+                className="object-contain dark:block"
               />
               <Image
-                src="/fixit-icon-circle-dark.svg"
+                src="/fixit icon-light.svg"
                 alt="Fixit logo"
                 fill
                 sizes="32px"
                 priority
-                className="hidden object-contain dark:block"
+                className="hidden object-contain dark:hidden"
               />
             </div>
-            <span className="hidden text-xl font-bold sm:flex">Fixit Admin</span>
+            <span className="text-md hidden font-bold italic sm:flex">Fixit</span>
           </Link>
           <div className="hidden items-center gap-4 md:flex">
             <Link href="/admin">
@@ -76,23 +76,23 @@ export default function AdminNav({ profile }: AdminNavProps) {
             </Link>
             <Link href="/admin/tickets">
               <Button variant="ghost" size="sm">
-                รายการทั้งหมด
+                รายการซ่อม
               </Button>
             </Link>
             <Link href="/admin/analytics">
               <Button variant="ghost" size="sm">
-                วิเคราะห์ข้อมูล
+                วิเคราะห์
               </Button>
             </Link>
 
             <Link href="/admin/rooms">
               <Button variant="ghost" size="sm">
-                จัดการห้อง
+                ห้องพัก
               </Button>
             </Link>
             <Link href="/admin/users">
               <Button variant="ghost" size="sm">
-                จัดการผู้ใช้
+                ผู้ใช้
               </Button>
             </Link>
           </div>
@@ -128,26 +128,26 @@ export default function AdminNav({ profile }: AdminNavProps) {
               <DropdownMenuItem asChild className="md:hidden">
                 <Link href="/admin/tickets">
                   <FileText className="mr-2 h-4 w-4" />
-                  รายการทั้งหมด
+                  รายการซ่อม
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="md:hidden">
                 <Link href="/admin/analytics">
                   <BarChart3 className="mr-2 h-4 w-4" />
-                  วิเคราะห์ข้อมูล
+                  วิเคราะห์
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="md:hidden" />
               <DropdownMenuItem asChild className="md:hidden">
                 <Link href="/admin/rooms">
                   <Building2 className="mr-2 h-4 w-4" />
-                  จัดการห้อง
+                  ห้องพัก
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="md:hidden">
                 <Link href="/admin/users">
                   <UsersRound className="mr-2 h-4 w-4" />
-                  จัดการผู้ใช้
+                  ผู้ใช้
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
