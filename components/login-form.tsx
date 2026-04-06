@@ -117,7 +117,15 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
                 </Button>
                 <FieldDescription className="text-center">
-                  ไม่มีบัญชี? โปรดติดต่อแอดมิน{' '}
+                  ไม่มีบัญชี?{' '}
+                  <Link
+                    href="https://lin.ee/OHWca5o"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline-offset-4 hover:underline"
+                  >
+                    ติดต่อแอดมิน
+                  </Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>
