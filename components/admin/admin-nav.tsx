@@ -63,7 +63,7 @@ export default function AdminNav({ profile }: AdminNavProps) {
                 fill
                 sizes="32px"
                 priority
-                className="hidden object-contain dark:hidden"
+                className="object-contain dark:hidden"
               />
             </div>
             <span className="text-md hidden font-bold italic sm:flex">Fixit</span>
