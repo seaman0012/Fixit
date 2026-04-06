@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
+import { useDebounce } from 'use-debounce'
 import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -42,7 +43,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Building2, DoorOpen, PencilLine, Plus, Search, UsersRound, Wrench } from 'lucide-react'
-import { Separator } from '@/components/ui/separator'
 
 export interface RoomRecord {
   id: string
@@ -79,6 +79,7 @@ function getRoomStatusVariant(status: string): 'outline' | 'secondary' | 'destru
 export default function RoomManagementClient({ initialRooms }: { initialRooms: RoomRecord[] }) {
   const [rooms, setRooms] = useState<RoomRecord[]>(initialRooms)
   const [search, setSearch] = useState('')
+  const [debouncedSearch] = useDebounce(search, 300)
   const [selectedFloor, setSelectedFloor] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -95,7 +96,7 @@ export default function RoomManagementClient({ initialRooms }: { initialRooms: R
   }, [rooms])
 
   const filteredRooms = useMemo(() => {
-    const query = search.trim().toLowerCase()
+    const query = debouncedSearch.trim().toLowerCase()
 
     return rooms.filter((room) => {
       const matchSearch =
@@ -108,7 +109,7 @@ export default function RoomManagementClient({ initialRooms }: { initialRooms: R
 
       return matchSearch && matchFloor && matchStatus
     })
-  }, [rooms, search, selectedFloor, selectedStatus])
+  }, [rooms, debouncedSearch, selectedFloor, selectedStatus])
 
   const stats = useMemo(() => {
     const total = rooms.length

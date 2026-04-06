@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
+import { useDebounce } from 'use-debounce'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -108,6 +109,7 @@ export default function UserManagementClient({
   const [users, setUsers] = useState<UserRecord[]>(initialUsers)
   const [inviteRooms, setInviteRooms] = useState<AvailableRoomOption[]>(availableRooms)
   const [search, setSearch] = useState('')
+  const [debouncedSearch] = useDebounce(search, 300)
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
@@ -127,7 +129,7 @@ export default function UserManagementClient({
   )
 
   const filteredUsers = useMemo(() => {
-    const query = search.trim().toLowerCase()
+    const query = debouncedSearch.trim().toLowerCase()
 
     return users.filter((user) => {
       const matchSearch =
@@ -147,7 +149,7 @@ export default function UserManagementClient({
 
       return matchSearch && matchRole && matchStatus
     })
-  }, [users, search, roleFilter, statusFilter])
+  }, [users, debouncedSearch, roleFilter, statusFilter])
 
   const roleOptions = useMemo(() => {
     return Array.from(new Set(users.map((user) => user.role))).sort((a, b) => a.localeCompare(b))

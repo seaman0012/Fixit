@@ -14,6 +14,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { format } from 'date-fns'
+import { useDebounce } from 'use-debounce'
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 
 import { categoryConfig, statusConfig } from '@/lib/constants'
@@ -81,9 +82,10 @@ export function DataTable({
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [searchQuery, setSearchQuery] = React.useState('')
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300)
 
   const searchedTickets = React.useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
+    const query = debouncedSearchQuery.trim().toLowerCase()
 
     if (!query) {
       return tickets
@@ -98,7 +100,7 @@ export function DataTable({
         (ticket.profiles?.phone || '').toLowerCase().includes(query)
       )
     })
-  }, [tickets, searchQuery])
+  }, [tickets, debouncedSearchQuery])
 
   const columns = React.useMemo<ColumnDef<DataTableTicket>[]>(() => {
     const baseColumns: ColumnDef<DataTableTicket>[] = [
