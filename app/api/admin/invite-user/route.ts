@@ -13,6 +13,11 @@ type CancelInviteBody = {
   userId?: string
 }
 
+type ToggleUserActiveBody = {
+  userId?: string
+  isActive?: boolean
+}
+
 async function assertCanManageUsers() {
   const supabase = await createClient()
 
@@ -189,4 +194,56 @@ export async function DELETE(request: Request) {
   }
 
   return NextResponse.json({ success: true })
+}
+
+export async function PATCH(request: Request) {
+  const access = await assertCanManageUsers()
+  if ('error' in access) {
+    return access.error
+  }
+
+  const body = (await request.json()) as ToggleUserActiveBody
+  const userId = body.userId?.trim() || ''
+  const isActive = body.isActive
+
+  if (!userId || typeof isActive !== 'boolean') {
+    return NextResponse.json({ error: 'userId and isActive are required' }, { status: 400 })
+  }
+
+  const adminClient = createAdminClient()
+
+  const { data: targetUser, error: targetUserError } = await adminClient
+    .from('profiles')
+    .select('id, role')
+    .eq('id', userId)
+    .single()
+
+  if (targetUserError || !targetUser) {
+    return NextResponse.json({ error: 'ไม่พบผู้ใช้งาน' }, { status: 404 })
+  }
+
+  if (targetUser.role === 'admin' || targetUser.role === 'owner') {
+    return NextResponse.json({ error: 'ไม่สามารถเปลี่ยนสถานะผู้ดูแลระบบได้' }, { status: 400 })
+  }
+
+  const { error: updateError } = await adminClient
+    .from('profiles')
+    .update({
+      is_active: isActive,
+      status: isActive ? 'active' : 'inactive',
+    })
+    .eq('id', userId)
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 400 })
+  }
+
+  return NextResponse.json({
+    success: true,
+    user: {
+      id: userId,
+      isActive,
+      status: isActive ? 'active' : 'inactive',
+    },
+  })
 }

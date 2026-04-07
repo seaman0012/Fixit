@@ -194,14 +194,19 @@ export default function UserManagementClient({
       const nextActive = !user.isActive
       setUpdatingUserId(user.id)
 
-      const supabase = createClient()
       try {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ is_active: nextActive, status: nextActive ? 'active' : 'inactive' })
-          .eq('id', user.id)
+        const response = await fetch('/api/admin/invite-user', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: user.id, isActive: nextActive }),
+        })
 
-        if (error) throw error
+        const payload = (await response.json()) as { error?: string }
+        if (!response.ok) {
+          throw new Error(payload.error || 'ไม่สามารถอัปเดตสถานะบัญชีได้')
+        }
 
         setUsers((prev) =>
           prev.map((item) =>
@@ -398,7 +403,7 @@ export default function UserManagementClient({
                   ) : (
                     <RotateCcw data-icon="inline-start" />
                   )}
-                  {isActive ? 'ระงับใช้งาน' : 'คืนสถานะ'}
+                  {isActive ? 'ปิดการใช้งาน' : 'คืนสถานะ'}
                 </Button>
               )}
             </div>
