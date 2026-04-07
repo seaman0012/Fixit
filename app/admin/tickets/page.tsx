@@ -1,16 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Clock, Loader, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { DataTable } from '@/components/ui/data-table'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { DataTableTicket } from '@/components/ui/data-table'
+import AdminTicketsRealtime from '@/components/admin/admin-tickets-realtime'
 
 export default async function AdminTicketsPage() {
   const supabase = await createClient()
@@ -50,12 +41,6 @@ export default async function AdminTicketsPage() {
       profiles: ticket.profiles,
     }))
 
-  const pendingCount = tickets?.filter((ticket: any) => ticket.status === 'pending').length || 0
-  const inProgressCount =
-    tickets?.filter((ticket: any) => ticket.status === 'in_progress').length || 0
-  const completedCount = tickets?.filter((ticket: any) => ticket.status === 'completed').length || 0
-  const cancelledCount = tickets?.filter((ticket: any) => ticket.status === 'cancelled').length || 0
-
   return (
     <div className="@container/main flex flex-col gap-6">
       <h1 className="text-3xl font-bold">รายการทั้งหมด</h1>
@@ -63,36 +48,9 @@ export default async function AdminTicketsPage() {
         <CardHeader>
           <CardTitle className="text-2xl">สถานะของรายการทั้งหมด</CardTitle>
           <CardDescription>เลือกหัวข้อรายการเพื่อดูรายละเอียด</CardDescription>
-          <CardAction className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="text-muted-foreground">
-              <Clock className="text-muted-foreground size-4" />
-              รอดำเนินการ {pendingCount}
-            </Badge>
-            <Badge variant="outline" className="text-muted-foreground">
-              <Loader className="size-4 text-blue-500 dark:text-blue-400" />
-              กำลังดำเนินการ {inProgressCount}
-            </Badge>
-            <Badge variant="outline" className="text-muted-foreground">
-              <CheckCircle2 className="dark:text-background size-4 fill-green-500 text-white dark:fill-green-400" />
-              เสร็จสิ้น {completedCount}
-            </Badge>
-            <Badge variant="outline" className="text-muted-foreground">
-              <AlertCircle className="dark:text-background size-4 fill-red-500 text-white dark:fill-red-400" />
-              ยกเลิก {cancelledCount}
-            </Badge>
-          </CardAction>
         </CardHeader>
         <CardContent>
-          <DataTable
-            tickets={tableTickets}
-            detailBasePath="/admin/tickets"
-            pageSize={10}
-            showReporter
-            showSearch
-            showPagination
-            showStatusFilter
-            showViewAllButton={false}
-          />
+          <AdminTicketsRealtime initialTickets={tableTickets} />
         </CardContent>
       </Card>
     </div>
