@@ -14,6 +14,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { format } from 'date-fns'
+import { useDebounce } from 'use-debounce'
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 
 import { categoryConfig, statusConfig } from '@/lib/constants'
@@ -66,6 +67,7 @@ interface DataTableProps {
   showPagination?: boolean
   showStatusFilter?: boolean
   showViewAllButton?: boolean
+  showStatusCountBadges?: boolean
 }
 
 export function DataTable({
@@ -77,13 +79,15 @@ export function DataTable({
   showPagination = true,
   showStatusFilter = true,
   showViewAllButton = true,
+  showStatusCountBadges = false,
 }: DataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [searchQuery, setSearchQuery] = React.useState('')
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300)
 
   const searchedTickets = React.useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
+    const query = debouncedSearchQuery.trim().toLowerCase()
 
     if (!query) {
       return tickets
@@ -98,7 +102,7 @@ export function DataTable({
         (ticket.profiles?.phone || '').toLowerCase().includes(query)
       )
     })
-  }, [tickets, searchQuery])
+  }, [tickets, debouncedSearchQuery])
 
   const columns = React.useMemo<ColumnDef<DataTableTicket>[]>(() => {
     const baseColumns: ColumnDef<DataTableTicket>[] = [
@@ -244,13 +248,26 @@ export function DataTable({
   })
 
   const statusFilterValue = (table.getColumn('status')?.getFilterValue() as string) ?? 'all'
+  const statusCounts = React.useMemo(() => {
+    return tickets.reduce(
+      (acc, ticket) => {
+        acc.all += 1
+        if (ticket.status === 'pending') acc.pending += 1
+        if (ticket.status === 'in_progress') acc.inProgress += 1
+        if (ticket.status === 'completed') acc.completed += 1
+        if (ticket.status === 'cancelled') acc.cancelled += 1
+        return acc
+      },
+      { all: 0, pending: 0, inProgress: 0, completed: 0, cancelled: 0 }
+    )
+  }, [tickets])
 
   return (
     <div className="w-full">
-      <div className="flex flex-col gap-3 pb-4 md:flex-row md:items-center">
+      <div className="flex flex-col gap-3 pb-4 md:flex-row-reverse md:items-center">
         <div className="flex flex-1 items-center gap-2">
           {showStatusFilter ? (
-            <div className="w-full md:max-w-xl">
+            <div className="md:place ml-auto w-full md:max-w-xl">
               <Select
                 value={statusFilterValue}
                 onValueChange={(value) => table.getColumn('status')?.setFilterValue(value)}
@@ -273,19 +290,33 @@ export function DataTable({
                 onValueChange={(value) => table.getColumn('status')?.setFilterValue(value)}
                 className="hidden md:flex md:w-full"
               >
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="all">ทั้งหมด</TabsTrigger>
-                  <TabsTrigger className="w-full" value="pending">
-                    รอดำเนินการ
+                <TabsList className="grid grid-cols-5">
+                  <TabsTrigger value="all" className="w-full gap-1">
+                    <span>ทั้งหมด</span>
                   </TabsTrigger>
-                  <TabsTrigger className="w-full" value="in_progress">
-                    กำลังดำเนินการ
+                  <TabsTrigger className="w-full gap-1" value="pending">
+                    <span>รอดำเนินการ</span>
+                    {showStatusCountBadges ? (
+                      <Badge variant="ghost">{statusCounts.pending}</Badge>
+                    ) : null}
                   </TabsTrigger>
-                  <TabsTrigger className="w-full" value="completed">
-                    เสร็จสิ้น
+                  <TabsTrigger className="w-full gap-1" value="in_progress">
+                    <span>ดำเนินการ</span>
+                    {showStatusCountBadges ? (
+                      <Badge variant="ghost">{statusCounts.inProgress}</Badge>
+                    ) : null}
                   </TabsTrigger>
-                  <TabsTrigger className="w-full" value="cancelled">
-                    ยกเลิก
+                  <TabsTrigger className="w-full gap-1" value="completed">
+                    <span>เสร็จสิ้น</span>
+                    {showStatusCountBadges ? (
+                      <Badge variant="ghost">{statusCounts.completed}</Badge>
+                    ) : null}
+                  </TabsTrigger>
+                  <TabsTrigger className="w-full gap-1" value="cancelled">
+                    <span>ยกเลิก</span>
+                    {showStatusCountBadges ? (
+                      <Badge variant="ghost">{statusCounts.cancelled}</Badge>
+                    ) : null}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>

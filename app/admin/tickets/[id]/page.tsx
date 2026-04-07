@@ -64,6 +64,16 @@ export default async function AdminTicketDetailPage({
   const { id } = await params
   const supabase = await createClient()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user?.id)
+    .single()
+
   // ดึงข้อมูล ticket
   const { data: ticket, error } = (await supabase
     .from('tickets')
@@ -171,7 +181,7 @@ export default async function AdminTicketDetailPage({
             </CardContent>
           </Card>
 
-          <StatusUpdateForm ticket={ticket} />
+          <StatusUpdateForm ticket={ticket} readOnly={profileData?.role === 'owner'} />
 
           <CommentSection ticketId={id} initialComments={comments} userRole="admin" />
         </div>

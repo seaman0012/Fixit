@@ -4,6 +4,16 @@ import RoomManagementClient, { type RoomRecord } from '@/components/admin/room-m
 export default async function AdminRoomManagementPage() {
   const supabase = await createClient()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user?.id)
+    .single()
+
   const { data } = (await supabase
     .from('rooms')
     .select(
@@ -58,9 +68,11 @@ export default async function AdminRoomManagementPage() {
     }
   })
 
+  const isReadOnly = profileData?.role === 'owner'
+
   return (
     <div>
-      <RoomManagementClient initialRooms={rooms} />
+      <RoomManagementClient initialRooms={rooms} readOnly={isReadOnly} />
     </div>
   )
 }

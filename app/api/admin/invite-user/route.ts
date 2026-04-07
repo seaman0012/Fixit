@@ -2,7 +2,23 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export async function POST(request: Request) {
+type InviteBody = {
+  fullName?: string
+  phone?: string
+  email?: string
+  roomId?: string
+}
+
+type CancelInviteBody = {
+  userId?: string
+}
+
+type ToggleUserActiveBody = {
+  userId?: string
+  isActive?: boolean
+}
+
+async function assertCanManageUsers() {
   const supabase = await createClient()
 
   const {
@@ -10,7 +26,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
   }
 
   const { data: actor } = await supabase
@@ -22,15 +38,22 @@ export async function POST(request: Request) {
   const canManageUsers = actor?.is_active && (actor?.role === 'admin' || actor?.role === 'owner')
 
   if (!canManageUsers) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
   }
 
-  const body = (await request.json()) as {
-    fullName?: string
-    phone?: string
-    email?: string
-    roomId?: string
+  return { supabase }
+}
+
+export async function POST(request: Request) {
+  const access = await assertCanManageUsers()
+  if ('error' in access) {
+    return access.error
   }
+
+  const appOrigin = new URL(request.url).origin
+
+  const supabase = access.supabase
+  const body = (await request.json()) as InviteBody
 
   const fullName = body.fullName?.trim() || ''
   const phone = body.phone?.trim() || ''
@@ -56,12 +79,14 @@ export async function POST(request: Request) {
   const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     email,
     {
+      redirectTo: `${appOrigin}/auth/update-password`,
       data: {
         full_name: fullName,
         phone,
         role: 'resident',
         room_id: roomId,
-        is_active: true,
+        is_active: false,
+        status: 'pending',
       },
     }
   )
@@ -80,7 +105,8 @@ export async function POST(request: Request) {
       phone,
       role: 'resident',
       room_id: roomId,
-      is_active: true,
+      is_active: false,
+      status: 'pending',
     })
 
     if (upsertError) {
@@ -107,7 +133,117 @@ export async function POST(request: Request) {
       roomId,
       roomNumber: room.room_number,
       role: 'resident',
-      isActive: true,
+      isActive: false,
+      status: 'pending',
+    },
+  })
+}
+
+export async function DELETE(request: Request) {
+  const access = await assertCanManageUsers()
+  if ('error' in access) {
+    return access.error
+  }
+
+  const supabase = access.supabase
+  const body = (await request.json()) as CancelInviteBody
+  const userId = body.userId?.trim() || ''
+
+  if (!userId) {
+    return NextResponse.json({ error: 'userId is required' }, { status: 400 })
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, room_id, status')
+    .eq('id', userId)
+    .single()
+
+  if (profileError || !profile) {
+    return NextResponse.json({ error: 'ไม่พบคำเชิญนี้' }, { status: 404 })
+  }
+
+  if (profile.status !== 'pending') {
+    return NextResponse.json(
+      { error: 'ยกเลิกได้เฉพาะคำเชิญที่อยู่ในสถานะ pending' },
+      { status: 400 }
+    )
+  }
+
+  const adminClient = createAdminClient()
+
+  if (profile.room_id) {
+    const { error: updateRoomError } = await adminClient
+      .from('rooms')
+      .update({ status: 'available' })
+      .eq('id', profile.room_id)
+
+    if (updateRoomError) {
+      return NextResponse.json({ error: updateRoomError.message }, { status: 400 })
+    }
+  }
+
+  const { error: deleteProfileError } = await adminClient.from('profiles').delete().eq('id', userId)
+  if (deleteProfileError) {
+    return NextResponse.json({ error: deleteProfileError.message }, { status: 400 })
+  }
+
+  const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(profile.id)
+  if (deleteAuthError) {
+    return NextResponse.json({ error: deleteAuthError.message }, { status: 400 })
+  }
+
+  return NextResponse.json({ success: true })
+}
+
+export async function PATCH(request: Request) {
+  const access = await assertCanManageUsers()
+  if ('error' in access) {
+    return access.error
+  }
+
+  const body = (await request.json()) as ToggleUserActiveBody
+  const userId = body.userId?.trim() || ''
+  const isActive = body.isActive
+
+  if (!userId || typeof isActive !== 'boolean') {
+    return NextResponse.json({ error: 'userId and isActive are required' }, { status: 400 })
+  }
+
+  const adminClient = createAdminClient()
+
+  const { data: targetUser, error: targetUserError } = await adminClient
+    .from('profiles')
+    .select('id, role')
+    .eq('id', userId)
+    .single()
+
+  if (targetUserError || !targetUser) {
+    return NextResponse.json({ error: 'ไม่พบผู้ใช้งาน' }, { status: 404 })
+  }
+
+  if (targetUser.role === 'admin' || targetUser.role === 'owner') {
+    return NextResponse.json({ error: 'ไม่สามารถเปลี่ยนสถานะผู้ดูแลระบบได้' }, { status: 400 })
+  }
+
+  const { error: updateError } = await adminClient
+    .from('profiles')
+    .update({
+      is_active: isActive,
+      status: isActive ? 'active' : 'inactive',
+    })
+    .eq('id', userId)
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 400 })
+  }
+
+  return NextResponse.json({
+    success: true,
+    user: {
+      id: userId,
+      isActive,
+      status: isActive ? 'active' : 'inactive',
     },
   })
 }

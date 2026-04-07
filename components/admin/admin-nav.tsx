@@ -21,11 +21,17 @@ interface AdminNavProps {
   profile: {
     full_name: string
     email: string
+    role?: string
   }
 }
 
 export default function AdminNav({ profile }: AdminNavProps) {
   const router = useRouter()
+
+  const getRoleLabel = (role?: string) => {
+    if (role === 'owner') return 'Owner'
+    return 'Admin'
+  }
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -63,7 +69,7 @@ export default function AdminNav({ profile }: AdminNavProps) {
                 fill
                 sizes="32px"
                 priority
-                className="hidden object-contain dark:hidden"
+                className="object-contain dark:hidden"
               />
             </div>
             <span className="text-md hidden font-bold italic sm:flex">Fixit</span>
@@ -107,7 +113,9 @@ export default function AdminNav({ profile }: AdminNavProps) {
                 </Avatar>
                 <div className="hidden flex-col items-start text-left text-sm md:flex">
                   <span className="font-medium">{profile.full_name}</span>
-                  <span className="text-muted-foreground text-xs">ผู้ดูแลหอพัก</span>
+                  <span className="text-muted-foreground text-xs">
+                    {getRoleLabel(profile.role)}
+                  </span>
                 </div>
               </Button>
             </DropdownMenuTrigger>
