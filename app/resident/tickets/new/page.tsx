@@ -252,13 +252,21 @@ export default function NewTicketPage() {
       if (error) throw error
 
       try {
-        await fetch('/api/line/notify-admin', {
+        const notifyResponse = await fetch('/api/line/notify-admin', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ ticketId: data.id }),
         })
+
+        if (!notifyResponse.ok) {
+          const notifyBody = await notifyResponse.json().catch(() => null)
+          console.error('LINE notify failed', {
+            status: notifyResponse.status,
+            body: notifyBody,
+          })
+        }
       } catch (notifyError) {
         console.error('Failed to notify admins via LINE', notifyError)
       }

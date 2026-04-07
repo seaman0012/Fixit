@@ -23,6 +23,7 @@ export default async function AdminUserManagementPage() {
       phone,
       email,
       role,
+      status,
       is_active,
       room_id,
       rooms:room_id (
@@ -37,6 +38,7 @@ export default async function AdminUserManagementPage() {
       phone: string | null
       email: string
       role: string
+      status: string
       is_active: boolean
       room_id: string | null
       rooms: { room_number: string } | null
@@ -57,6 +59,7 @@ export default async function AdminUserManagementPage() {
     phone: user.phone,
     email: user.email,
     role: user.role,
+    status: user.status,
     isActive: user.is_active,
     roomId: user.room_id,
     roomNumber: user.rooms?.room_number ?? null,

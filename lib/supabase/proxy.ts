@@ -55,10 +55,15 @@ export async function updateSession(request: NextRequest) {
   // If authenticated user opens auth routes, redirect by role.
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
+    const isUpdatePasswordRoute = pathname === '/auth/update-password'
+
+    if (isUpdatePasswordRoute) {
+      return supabaseResponse
+    }
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, is_active')
+      .select('role, is_active, status')
       .eq('id', user.id)
       .single()
 
@@ -74,6 +79,9 @@ export async function updateSession(request: NextRequest) {
     } else if (profile?.role === 'admin') {
       url.pathname = '/admin'
       url.search = ''
+    } else if (!profile) {
+      // If profile cannot be read yet (RLS/race), don't force a dashboard redirect from auth pages.
+      return supabaseResponse
     } else {
       url.pathname = '/resident'
       url.search = ''

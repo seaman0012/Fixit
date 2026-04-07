@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
@@ -72,6 +72,7 @@ export interface UserRecord {
   phone: string | null
   email: string
   role: string
+  status: string
   roomId: string | null
   roomNumber: string | null
   isActive: boolean
@@ -99,6 +100,19 @@ function getRoleLabel(role: string) {
 function getRoleVariant(role: string): 'secondary' | 'outline' {
   if (role === 'admin' || role === 'owner') return 'secondary'
   return 'outline'
+}
+
+function getStatusLabel(status: string) {
+  if (status === 'active') return 'Active'
+  if (status === 'pending') return 'Pending'
+  if (status === 'inactive') return 'Inactive'
+  return status
+}
+
+function getStatusVariant(status: string): 'secondary' | 'outline' {
+  if (status === 'active') return 'secondary'
+  if (status === 'pending') return 'secondary'
+  return 'secondary'
 }
 
 function getInitials(name: string) {
@@ -148,13 +162,7 @@ export default function UserManagementClient({
         (user.phone ?? '').toLowerCase().includes(query) ||
         (user.roomNumber ?? '').toLowerCase().includes(query)
       const matchRole = roleFilter === 'all' || user.role === roleFilter
-      const matchStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'active'
-          ? user.isActive
-          : statusFilter === 'inactive'
-            ? !user.isActive
-            : true)
+      const matchStatus = statusFilter === 'all' || user.status === statusFilter
 
       return matchSearch && matchRole && matchStatus
     })
@@ -166,14 +174,112 @@ export default function UserManagementClient({
 
   const stats = useMemo(() => {
     const total = users.length
-    const active = users.filter((user) => user.isActive).length
-    const inactive = users.filter((user) => !user.isActive).length
+    const active = users.filter((user) => user.status === 'active').length
+    const pending = users.filter((user) => user.status === 'pending').length
+    const inactive = users.filter((user) => user.status === 'inactive').length
     const adminsAndOwners = users.filter(
       (user) => user.role === 'admin' || user.role === 'owner'
     ).length
 
-    return { total, active, inactive, adminsAndOwners }
+    return { total, active, pending, inactive, adminsAndOwners }
   }, [users])
+
+  const handleToggleActive = useCallback((user: UserRecord) => {
+    void (async () => {
+      if (user.role === 'admin' || user.role === 'owner') {
+        toast.error('ไม่สามารถระงับบัญชีของผู้ดูแลหรือเจ้าของระบบได้')
+        return
+      }
+
+      const nextActive = !user.isActive
+      setUpdatingUserId(user.id)
+
+      const supabase = createClient()
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ is_active: nextActive, status: nextActive ? 'active' : 'inactive' })
+          .eq('id', user.id)
+
+        if (error) throw error
+
+        setUsers((prev) =>
+          prev.map((item) =>
+            item.id === user.id
+              ? {
+                  ...item,
+                  isActive: nextActive,
+                  status: nextActive ? 'active' : 'inactive',
+                }
+              : item
+          )
+        )
+
+        if (nextActive) {
+          toast.success('คืนสถานะบัญชีเรียบร้อยแล้ว')
+        } else {
+          toast.success('ระงับการใช้งานบัญชีเรียบร้อยแล้ว')
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'ไม่สามารถอัปเดตสถานะบัญชีได้'
+        toast.error(message)
+      } finally {
+        setUpdatingUserId(null)
+      }
+    })()
+  }, [])
+
+  const handleCancelInvite = useCallback((user: UserRecord) => {
+    void (async () => {
+      if (user.status !== 'pending') {
+        toast.error('ยกเลิกได้เฉพาะคำเชิญที่อยู่ในสถานะรอการยืนยัน')
+        return
+      }
+
+      setUpdatingUserId(user.id)
+
+      try {
+        const response = await fetch('/api/admin/invite-user', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: user.id }),
+        })
+
+        const payload = (await response.json()) as { error?: string }
+
+        if (!response.ok) {
+          throw new Error(payload.error || 'ไม่สามารถยกเลิกคำเชิญได้')
+        }
+
+        setUsers((prev) => prev.filter((item) => item.id !== user.id))
+
+        if (user.roomId) {
+          setInviteRooms((prev) => {
+            if (prev.some((room) => room.id === user.roomId)) {
+              return prev
+            }
+
+            return [
+              ...prev,
+              {
+                id: user.roomId,
+                roomNumber: user.roomNumber ?? '',
+              },
+            ].sort((a, b) => a.roomNumber.localeCompare(b.roomNumber))
+          })
+        }
+
+        toast.success('ยกเลิกคำเชิญเรียบร้อยแล้ว')
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'ไม่สามารถยกเลิกคำเชิญได้'
+        toast.error(message)
+      } finally {
+        setUpdatingUserId(null)
+      }
+    })()
+  }, [])
 
   const tableColumns = useMemo<ColumnDef<UserRecord>[]>(
     () => [
@@ -230,23 +336,32 @@ export default function UserManagementClient({
           ),
       },
       {
-        accessorKey: 'isActive',
+        accessorKey: 'status',
         header: 'สถานะบัญชี',
-        size: 120,
+        size: 140,
         cell: ({ row }) =>
-          row.original.isActive ? (
-            <Badge variant="secondary">
+          row.original.status === 'pending' ? (
+            <Badge variant={getStatusVariant(row.original.status)}>
+              <CircleSmall
+                fill="currentColor"
+                data-icon="inline-start"
+                className="text-amber-400"
+              />
+              {getStatusLabel(row.original.status)}
+            </Badge>
+          ) : row.original.status === 'active' ? (
+            <Badge variant={getStatusVariant(row.original.status)}>
               <CircleSmall
                 fill="currentColor"
                 data-icon="inline-start"
                 className="text-green-400"
               />
-              Active
+              {getStatusLabel(row.original.status)}
             </Badge>
           ) : (
-            <Badge variant="secondary">
+            <Badge variant={getStatusVariant(row.original.status)}>
               <CircleSmall fill="currentColor" data-icon="inline-start" className="text-red-400" />
-              Suspended
+              {getStatusLabel(row.original.status)}
             </Badge>
           ),
       },
@@ -256,29 +371,42 @@ export default function UserManagementClient({
         size: 150,
         cell: ({ row }) => {
           const isProtected = row.original.role === 'admin' || row.original.role === 'owner'
-          const isActive = row.original.isActive
+          const isPending = row.original.status === 'pending'
+          const isActive = row.original.status === 'active'
 
           return (
             <div className="flex justify-start">
-              <Button
-                variant={isActive ? 'destructive' : 'outline'}
-                size="sm"
-                disabled={isProtected || updatingUserId === row.original.id || readOnly}
-                onClick={() => handleToggleActive(row.original)}
-              >
-                {isActive ? (
-                  <UserMinus data-icon="inline-start" />
-                ) : (
-                  <RotateCcw data-icon="inline-start" />
-                )}
-                {isActive ? 'ระงับใช้งาน' : 'คืนสถานะ'}
-              </Button>
+              {isPending ? (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={updatingUserId === row.original.id || readOnly}
+                  onClick={() => handleCancelInvite(row.original)}
+                >
+                  <UserX data-icon="inline-start" />
+                  ยกเลิกคำเชิญ
+                </Button>
+              ) : (
+                <Button
+                  variant={isActive ? 'destructive' : 'outline'}
+                  size="sm"
+                  disabled={isProtected || updatingUserId === row.original.id || readOnly}
+                  onClick={() => handleToggleActive(row.original)}
+                >
+                  {isActive ? (
+                    <UserMinus data-icon="inline-start" />
+                  ) : (
+                    <RotateCcw data-icon="inline-start" />
+                  )}
+                  {isActive ? 'ระงับใช้งาน' : 'คืนสถานะ'}
+                </Button>
+              )}
             </div>
           )
         },
       },
     ],
-    [updatingUserId, readOnly]
+    [updatingUserId, readOnly, handleToggleActive, handleCancelInvite]
   )
 
   const resetInviteForm = () => {
@@ -289,41 +417,6 @@ export default function UserManagementClient({
       email: '',
       roomId: '',
     })
-  }
-
-  const handleToggleActive = async (user: UserRecord) => {
-    if (user.role === 'admin' || user.role === 'owner') {
-      toast.error('ไม่สามารถระงับบัญชีของผู้ดูแลหรือเจ้าของระบบได้')
-      return
-    }
-
-    const nextActive = !user.isActive
-    setUpdatingUserId(user.id)
-
-    const supabase = createClient()
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_active: nextActive })
-        .eq('id', user.id)
-
-      if (error) throw error
-
-      setUsers((prev) =>
-        prev.map((item) => (item.id === user.id ? { ...item, isActive: nextActive } : item))
-      )
-
-      if (nextActive) {
-        toast.success('คืนสถานะบัญชีเรียบร้อยแล้ว')
-      } else {
-        toast.success('ระงับการใช้งานบัญชีเรียบร้อยแล้ว')
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'ไม่สามารถอัปเดตสถานะบัญชีได้'
-      toast.error(message)
-    } finally {
-      setUpdatingUserId(null)
-    }
   }
 
   const handleInviteUser = async () => {
@@ -354,6 +447,7 @@ export default function UserManagementClient({
           roomNumber: string
           role: string
           isActive: boolean
+          status: string
         }
       }
 
@@ -371,6 +465,7 @@ export default function UserManagementClient({
             phone: invitedUser.phone,
             email: invitedUser.email,
             role: invitedUser.role,
+            status: invitedUser.status,
             roomId: invitedUser.roomId,
             roomNumber: invitedUser.roomNumber,
             isActive: invitedUser.isActive,
@@ -398,7 +493,7 @@ export default function UserManagementClient({
         <h1 className="text-3xl font-bold">จัดการผู้ใช้</h1>
       </div>
 
-      <div className="*:from-primary/5 *:to-card grid grid-cols-1 gap-4 *:bg-linear-to-t *:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+      <div className="*:from-primary/5 *:to-card grid grid-cols-1 gap-4 *:bg-linear-to-t *:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-5">
         <Card>
           <CardHeader>
             <CardDescription>ผู้ใช้ทั้งหมด</CardDescription>
@@ -421,6 +516,18 @@ export default function UserManagementClient({
           </CardHeader>
           <CardFooter>
             <p className="text-muted-foreground text-xs">ใช้งานระบบได้ตามปกติ</p>
+          </CardFooter>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardDescription>รอการยืนยัน</CardDescription>
+            <CardTitle className="text-3xl font-semibold">{stats.pending}</CardTitle>
+            <CardAction>
+              <MailPlus className="size-4 text-amber-600" />
+            </CardAction>
+          </CardHeader>
+          <CardFooter>
+            <p className="text-muted-foreground text-xs">เชิญแล้วแต่ยังไม่กดยืนยัน</p>
           </CardFooter>
         </Card>
         <Card>
@@ -496,7 +603,8 @@ export default function UserManagementClient({
                   <SelectGroup>
                     <SelectItem value="all">ทุกสถานะ</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Suspended</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

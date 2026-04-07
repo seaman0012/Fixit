@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -25,6 +25,63 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createClient()
+    let isDisposed = false
+
+    const bootstrapInviteSession = async () => {
+      const hash = window.location.hash.startsWith('#')
+        ? window.location.hash.slice(1)
+        : window.location.hash
+      const hashParams = new URLSearchParams(hash)
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+      const linkType = hashParams.get('type')
+
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+
+        if (!error) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search)
+        }
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      const status = session?.user?.user_metadata?.status as string | undefined
+      const shouldGoSetPassword = linkType === 'invite' || status === 'pending'
+
+      if (!isDisposed && shouldGoSetPassword) {
+        router.replace('/auth/update-password')
+        router.refresh()
+      }
+    }
+
+    void bootstrapInviteSession()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const status = session?.user?.user_metadata?.status as string | undefined
+      if (status === 'pending') {
+        setTimeout(() => {
+          router.replace('/auth/update-password')
+          router.refresh()
+        }, 0)
+      }
+    })
+
+    return () => {
+      isDisposed = true
+      subscription.unsubscribe()
+    }
+  }, [router])
 
   const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()

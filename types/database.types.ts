@@ -56,6 +56,7 @@ export type Database = {
           is_active: boolean
           phone: string | null
           role: string
+          status: string
           room_id: string | null
           updated_at: string | null
         }
@@ -67,6 +68,7 @@ export type Database = {
           is_active?: boolean
           phone?: string | null
           role: string
+          status?: string
           room_id?: string | null
           updated_at?: string | null
         }
@@ -78,6 +80,7 @@ export type Database = {
           is_active?: boolean
           phone?: string | null
           role?: string
+          status?: string
           room_id?: string | null
           updated_at?: string | null
         }

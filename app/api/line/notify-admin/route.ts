@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendLineToAdmins, type LinePushMessage } from '@/lib/line/notify-admin'
-import { categoryConfig } from '@/lib/constants'
 
 // Request payload for triggering LINE admin notification.
 type NotifyAdminRequest = {
@@ -17,6 +16,8 @@ export async function POST(request: Request) {
     if (!body.ticketId) {
       return NextResponse.json({ error: 'ticketId is required' }, { status: 400 })
     }
+
+    const appOrigin = new URL(request.url).origin
 
     const supabase = await createClient()
     const {
@@ -35,11 +36,10 @@ export async function POST(request: Request) {
         `
         id,
         title,
-        category,
+        category_id,
         created_at,
-        rooms:room_id (
-          room_number
-        )
+        rooms:room_id (room_number),
+        categories:category_id (name)
       `
       )
       .eq('id', body.ticketId)
@@ -48,14 +48,23 @@ export async function POST(request: Request) {
       data: {
         id: string
         title: string
-        category: keyof typeof categoryConfig
+        category_id: string
         rooms: { room_number: string } | null
+        categories: { name: string } | null
         created_at: string
       } | null
       error: { message?: string } | null
     }
 
-    if (ticketError || !ticket) {
+    if (ticketError) {
+      console.error('[LINE notify-admin] ticket query failed', ticketError)
+      return NextResponse.json(
+        { error: ticketError.message ?? 'Ticket query failed' },
+        { status: 400 }
+      )
+    }
+
+    if (!ticket) {
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
     }
 
@@ -75,7 +84,7 @@ export async function POST(request: Request) {
     })
 
     const roomNumber = ticket.rooms?.room_number || '-'
-    const categoryLabel = categoryConfig[ticket.category] ?? ticket.category
+    const categoryLabel = ticket.categories?.name || '-'
     const reporterName = profile?.full_name ?? 'ผู้ใช้งาน'
 
     const altText = [
@@ -240,7 +249,7 @@ export async function POST(request: Request) {
                   action: {
                     type: 'uri',
                     label: 'ดูรายละเอียด',
-                    uri: `http://172.20.10.6:3000/admin/tickets/${ticket.id}`,
+                    uri: `${appOrigin}/admin/tickets/${ticket.id}`,
                   },
                   height: 'sm',
                   style: 'primary',
@@ -271,6 +280,13 @@ export async function POST(request: Request) {
 
     if (!lineResult.ok) {
       console.error('[LINE notify-admin] partial/failed', lineResult)
+      return NextResponse.json(
+        {
+          error: 'LINE notify failed',
+          lineResult,
+        },
+        { status: 502 }
+      )
     }
 
     return NextResponse.json({ ok: true, lineResult })
