@@ -17,7 +17,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Combobox } from '@/components/ui/combobox'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from '@/components/ui/combobox'
 import { DataTable } from '@/components/ui/data-table-generic'
 import {
   Dialog,
@@ -45,12 +52,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  CircleSmall,
+  KeyRound,
   MailPlus,
   RotateCcw,
   Search,
   ShieldCheck,
+  User,
   UserCheck,
   UserMinus,
+  UserPlus,
   UserX,
   UsersRound,
 } from 'lucide-react'
@@ -102,9 +113,11 @@ function getInitials(name: string) {
 export default function UserManagementClient({
   initialUsers,
   availableRooms,
+  readOnly = false,
 }: {
   initialUsers: UserRecord[]
   availableRooms: AvailableRoomOption[]
+  readOnly?: boolean
 }) {
   const [users, setUsers] = useState<UserRecord[]>(initialUsers)
   const [inviteRooms, setInviteRooms] = useState<AvailableRoomOption[]>(availableRooms)
@@ -116,17 +129,13 @@ export default function UserManagementClient({
 
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
   const [inviting, setInviting] = useState(false)
+  const [selectedInviteRoom, setSelectedInviteRoom] = useState<AvailableRoomOption | null>(null)
   const [inviteForm, setInviteForm] = useState<InviteFormValues>({
     fullName: '',
     phone: '',
     email: '',
     roomId: '',
   })
-
-  const roomOptions = useMemo(
-    () => inviteRooms.map((room) => ({ value: room.id, label: room.roomNumber })),
-    [inviteRooms]
-  )
 
   const filteredUsers = useMemo(() => {
     const query = debouncedSearch.trim().toLowerCase()
@@ -171,6 +180,7 @@ export default function UserManagementClient({
       {
         accessorKey: 'fullName',
         header: 'ผู้ใช้',
+        size: 200,
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
             <Avatar className="size-8">
@@ -183,49 +193,77 @@ export default function UserManagementClient({
       {
         accessorKey: 'email',
         header: 'อีเมล',
+        size: 300,
       },
       {
         accessorKey: 'phone',
         header: 'เบอร์โทร',
+        size: 200,
         cell: ({ row }) => row.original.phone ?? '-',
       },
       {
         accessorKey: 'roomNumber',
         header: 'ห้อง',
+        size: 80,
         cell: ({ row }) => row.original.roomNumber ?? '-',
       },
       {
         accessorKey: 'role',
         header: 'บทบาท',
-        cell: ({ row }) => (
-          <Badge variant={getRoleVariant(row.original.role)}>
-            {getRoleLabel(row.original.role)}
-          </Badge>
-        ),
+        size: 120,
+        cell: ({ row }) =>
+          row.original.role === 'admin' ? (
+            <Badge variant={getRoleVariant(row.original.role)}>
+              <ShieldCheck data-icon="inline-start" />
+              {getRoleLabel(row.original.role)}
+            </Badge>
+          ) : row.original.role === 'owner' ? (
+            <Badge variant={getRoleVariant(row.original.role)}>
+              <KeyRound data-icon="inline-start" />
+              {getRoleLabel(row.original.role)}
+            </Badge>
+          ) : (
+            <Badge variant={getRoleVariant(row.original.role)}>
+              <User data-icon="inline-start" />
+              {getRoleLabel(row.original.role)}
+            </Badge>
+          ),
       },
       {
         accessorKey: 'isActive',
         header: 'สถานะบัญชี',
+        size: 120,
         cell: ({ row }) =>
           row.original.isActive ? (
-            <Badge variant="secondary">Active</Badge>
+            <Badge variant="secondary">
+              <CircleSmall
+                fill="currentColor"
+                data-icon="inline-start"
+                className="text-green-400"
+              />
+              Active
+            </Badge>
           ) : (
-            <Badge variant="destructive">Suspended</Badge>
+            <Badge variant="secondary">
+              <CircleSmall fill="currentColor" data-icon="inline-start" className="text-red-400" />
+              Suspended
+            </Badge>
           ),
       },
       {
         id: 'actions',
         header: 'การควบคุมบัญชี',
+        size: 150,
         cell: ({ row }) => {
           const isProtected = row.original.role === 'admin' || row.original.role === 'owner'
           const isActive = row.original.isActive
 
           return (
-            <div className="flex justify-end">
+            <div className="flex justify-start">
               <Button
                 variant={isActive ? 'destructive' : 'outline'}
                 size="sm"
-                disabled={isProtected || updatingUserId === row.original.id}
+                disabled={isProtected || updatingUserId === row.original.id || readOnly}
                 onClick={() => handleToggleActive(row.original)}
               >
                 {isActive ? (
@@ -240,10 +278,11 @@ export default function UserManagementClient({
         },
       },
     ],
-    [updatingUserId]
+    [updatingUserId, readOnly]
   )
 
   const resetInviteForm = () => {
+    setSelectedInviteRoom(null)
     setInviteForm({
       fullName: '',
       phone: '',
@@ -323,21 +362,23 @@ export default function UserManagementClient({
       }
 
       if (payload.user) {
+        const invitedUser = payload.user
+
         setUsers((prev) => [
           {
-            id: payload.user?.id ?? crypto.randomUUID(),
-            fullName: payload.user.fullName,
-            phone: payload.user.phone,
-            email: payload.user.email,
-            role: payload.user.role,
-            roomId: payload.user.roomId,
-            roomNumber: payload.user.roomNumber,
-            isActive: payload.user.isActive,
+            id: invitedUser.id ?? crypto.randomUUID(),
+            fullName: invitedUser.fullName,
+            phone: invitedUser.phone,
+            email: invitedUser.email,
+            role: invitedUser.role,
+            roomId: invitedUser.roomId,
+            roomNumber: invitedUser.roomNumber,
+            isActive: invitedUser.isActive,
           },
           ...prev,
         ])
 
-        setInviteRooms((prev) => prev.filter((room) => room.id !== payload.user?.roomId))
+        setInviteRooms((prev) => prev.filter((room) => room.id !== invitedUser.roomId))
       }
 
       toast.success('ส่งอีเมลเชิญผู้ใช้สำเร็จแล้ว')
@@ -355,87 +396,6 @@ export default function UserManagementClient({
     <div className="@container/main flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-baseline sm:justify-between">
         <h1 className="text-3xl font-bold">จัดการผู้ใช้</h1>
-
-        <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <MailPlus data-icon="inline-start" />
-              เพิ่มผู้ใช้ใหม่
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>เชิญผู้ใช้งานใหม่</DialogTitle>
-              <DialogDescription>
-                กรอกข้อมูลผู้พักเพื่อส่งคำเชิญผ่านอีเมล ระบบจะเพิ่มบัญชีและผูกห้องให้อัตโนมัติ
-              </DialogDescription>
-            </DialogHeader>
-
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="invite-full-name">ชื่อ-นามสกุล</FieldLabel>
-                <Input
-                  id="invite-full-name"
-                  value={inviteForm.fullName}
-                  onChange={(event) =>
-                    setInviteForm((prev) => ({ ...prev, fullName: event.target.value }))
-                  }
-                  placeholder="เช่น สมชาย ใจดี"
-                />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="invite-phone">เบอร์โทรศัพท์</FieldLabel>
-                <Input
-                  id="invite-phone"
-                  value={inviteForm.phone}
-                  onChange={(event) =>
-                    setInviteForm((prev) => ({ ...prev, phone: event.target.value }))
-                  }
-                  placeholder="เช่น 0891234567"
-                />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="invite-email">อีเมล</FieldLabel>
-                <Input
-                  id="invite-email"
-                  type="email"
-                  value={inviteForm.email}
-                  onChange={(event) =>
-                    setInviteForm((prev) => ({ ...prev, email: event.target.value }))
-                  }
-                  placeholder="resident@example.com"
-                />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="invite-room">ห้อง (เฉพาะห้องที่ available)</FieldLabel>
-                <Combobox
-                  options={roomOptions}
-                  value={inviteForm.roomId}
-                  onValueChange={(value) => setInviteForm((prev) => ({ ...prev, roomId: value }))}
-                  placeholder="เลือกห้อง"
-                  searchPlaceholder="ค้นหาเลขห้อง..."
-                  emptyLabel="ไม่พบห้องว่าง"
-                />
-              </Field>
-            </FieldGroup>
-
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setInviteDialogOpen(false)}
-                disabled={inviting}
-              >
-                ยกเลิก
-              </Button>
-              <Button onClick={handleInviteUser} disabled={inviting}>
-                {inviting ? 'กำลังส่งคำเชิญ...' : 'ส่งคำเชิญ'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
 
       <div className="*:from-primary/5 *:to-card grid grid-cols-1 gap-4 *:bg-linear-to-t *:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
@@ -472,7 +432,7 @@ export default function UserManagementClient({
             </CardAction>
           </CardHeader>
           <CardFooter>
-            <p className="text-muted-foreground text-xs">ถูกระงับผ่าน is_active = false</p>
+            <p className="text-muted-foreground text-xs">บัญชีที่ถูกระงับ</p>
           </CardFooter>
         </Card>
         <Card>
@@ -491,14 +451,14 @@ export default function UserManagementClient({
 
       <Card className="rounded-2xl">
         <CardHeader>
-          <CardTitle>User Directory</CardTitle>
+          <CardTitle className="text-2xl">เพิ่มและจัดการผู้ใช้ใหม่</CardTitle>
           <CardDescription>
             ตารางผู้ใช้พร้อมฟิลเตอร์บทบาทและสถานะบัญชี รวมทั้งการเชิญผู้พักใหม่เข้าระบบ
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-            <InputGroup className="md:col-span-2">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <InputGroup className="w-full max-w-xs items-center md:col-span-2">
               <InputGroupAddon align="inline-start">
                 <InputGroupText>
                   <Search />
@@ -511,34 +471,132 @@ export default function UserManagementClient({
               />
             </InputGroup>
 
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="เลือกบทบาท" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="all">ทุกบทบาท</SelectItem>
-                  {roleOptions.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {getRoleLabel(role)}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <div className="flex h-fit items-center gap-2">
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="เลือกบทบาท" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">ทุกบทบาท</SelectItem>
+                    {roleOptions.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {getRoleLabel(role)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="เลือกสถานะบัญชี" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="all">ทุกสถานะ</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Suspended</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="เลือกสถานะบัญชี" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="all">ทุกสถานะ</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Suspended</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+
+              <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen} modal={false}>
+                <DialogTrigger asChild>
+                  <Button variant="default" className="md:w-32" disabled={readOnly}>
+                    <UserPlus data-icon="inline-start" />
+                    เพิ่มผู้ใช้ใหม่
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>เชิญผู้ใช้งานใหม่</DialogTitle>
+                    <DialogDescription>
+                      กรอกข้อมูลผู้พักเพื่อส่งคำเชิญผ่านอีเมล ระบบจะเพิ่มบัญชีและผูกห้องให้อัตโนมัติ
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel htmlFor="invite-full-name">ชื่อ-นามสกุล</FieldLabel>
+                      <Input
+                        id="invite-full-name"
+                        value={inviteForm.fullName}
+                        onChange={(event) =>
+                          setInviteForm((prev) => ({ ...prev, fullName: event.target.value }))
+                        }
+                        placeholder="เช่น สมชาย ใจดี"
+                      />
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="invite-phone">เบอร์โทรศัพท์</FieldLabel>
+                      <Input
+                        id="invite-phone"
+                        value={inviteForm.phone}
+                        onChange={(event) =>
+                          setInviteForm((prev) => ({ ...prev, phone: event.target.value }))
+                        }
+                        placeholder="เช่น 0891234567"
+                      />
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="invite-email">อีเมล</FieldLabel>
+                      <Input
+                        id="invite-email"
+                        type="email"
+                        value={inviteForm.email}
+                        onChange={(event) =>
+                          setInviteForm((prev) => ({ ...prev, email: event.target.value }))
+                        }
+                        placeholder="resident@example.com"
+                      />
+                    </Field>
+
+                    <Field>
+                      <FieldLabel htmlFor="invite-room">ห้องว่าง</FieldLabel>
+                      <Combobox
+                        items={inviteRooms}
+                        value={selectedInviteRoom}
+                        itemToStringLabel={(room) => room.roomNumber}
+                        itemToStringValue={(room) => room.id}
+                        onValueChange={(value) => {
+                          setSelectedInviteRoom(value ?? null)
+                          setInviteForm((prev) => ({ ...prev, roomId: value?.id ?? '' }))
+                        }}
+                        autoHighlight
+                      >
+                        <ComboboxInput id="invite-room" placeholder="เลือกห้อง" showClear />
+                        <ComboboxContent>
+                          <ComboboxEmpty>ไม่พบห้องว่าง</ComboboxEmpty>
+                          <ComboboxList>
+                            {(room) => (
+                              <ComboboxItem key={room.id} value={room}>
+                                {room.roomNumber}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                    </Field>
+                  </FieldGroup>
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setInviteDialogOpen(false)}
+                      disabled={inviting}
+                    >
+                      ยกเลิก
+                    </Button>
+                    <Button onClick={handleInviteUser} disabled={inviting}>
+                      {inviting ? 'กำลังส่งคำเชิญ...' : 'ส่งคำเชิญ'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
 
           <DataTable

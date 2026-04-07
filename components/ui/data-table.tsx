@@ -249,10 +249,10 @@ export function DataTable({
 
   return (
     <div className="w-full">
-      <div className="flex flex-col gap-3 pb-4 md:flex-row md:items-center">
+      <div className="flex flex-col gap-3 pb-4 md:flex-row-reverse md:items-center">
         <div className="flex flex-1 items-center gap-2">
           {showStatusFilter ? (
-            <div className="w-full md:max-w-xl">
+            <div className="md:place ml-auto w-full md:max-w-xl">
               <Select
                 value={statusFilterValue}
                 onValueChange={(value) => table.getColumn('status')?.setFilterValue(value)}
