@@ -61,7 +61,7 @@ export default async function AdminTicketsPage() {
       <h1 className="text-3xl font-bold">รายการทั้งหมด</h1>
       <Card className="rounded-2xl">
         <CardHeader>
-          <CardTitle>สถานะของรายการทั้งหมด</CardTitle>
+          <CardTitle className="text-2xl">สถานะของรายการทั้งหมด</CardTitle>
           <CardDescription>เลือกหัวข้อรายการเพื่อดูรายละเอียด</CardDescription>
           <CardAction className="flex flex-wrap gap-2">
             <Badge variant="outline" className="text-muted-foreground">

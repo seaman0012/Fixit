@@ -41,7 +41,9 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
+  const pathname = request.nextUrl.pathname
+  const isAuthRoute = pathname.startsWith('/auth')
+  const isAuthErrorRoute = pathname === '/auth/error'
 
   // If unauthenticated and not on auth routes, send to login.
   if (!user && !isAuthRoute) {
@@ -61,12 +63,20 @@ export async function updateSession(request: NextRequest) {
       .single()
 
     if (profile && !profile.is_active) {
+      // Allow suspended users to open the dedicated error page without redirect loops.
+      if (isAuthErrorRoute) {
+        return supabaseResponse
+      }
+
       url.pathname = '/auth/error'
+      url.search = ''
       url.searchParams.set('error', 'account_suspended')
     } else if (profile?.role === 'admin') {
       url.pathname = '/admin'
+      url.search = ''
     } else {
       url.pathname = '/resident'
+      url.search = ''
     }
 
     return NextResponse.redirect(url)

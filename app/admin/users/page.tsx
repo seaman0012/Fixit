@@ -4,6 +4,16 @@ import UserManagementClient, { type UserRecord } from '@/components/admin/user-m
 export default async function AdminUserManagementPage() {
   const supabase = await createClient()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user?.id)
+    .single()
+
   const { data } = (await supabase
     .from('profiles')
     .select(
@@ -57,5 +67,13 @@ export default async function AdminUserManagementPage() {
     roomNumber: room.room_number,
   }))
 
-  return <UserManagementClient initialUsers={users} availableRooms={availableRooms} />
+  const isReadOnly = profileData?.role === 'owner'
+
+  return (
+    <UserManagementClient
+      initialUsers={users}
+      availableRooms={availableRooms}
+      readOnly={isReadOnly}
+    />
+  )
 }

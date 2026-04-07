@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card'
 import { DataTable } from '@/components/ui/data-table'
 import type { DataTableTicket } from '@/components/ui/data-table'
-import { Clock, AlertCircle, CheckCircle2, FileText, Loader } from 'lucide-react'
+import { Clock, AlertCircle, CheckCircle2, FileText, Loader, Car } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function AdminDashboard() {
