@@ -68,11 +68,10 @@ export default async function AdminTicketDetailPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user?.id)
-    .single()
+  const profileQuery = user?.id
+    ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+    : { data: null }
+  const profileData = profileQuery.data
 
   // ดึงข้อมูล ticket
   const { data: ticket, error } = (await supabase

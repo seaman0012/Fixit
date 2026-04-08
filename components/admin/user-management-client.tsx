@@ -260,16 +260,18 @@ export default function UserManagementClient({
 
         setUsers((prev) => prev.filter((item) => item.id !== user.id))
 
-        if (user.roomId) {
+        const roomId = user.roomId
+
+        if (roomId) {
           setInviteRooms((prev) => {
-            if (prev.some((room) => room.id === user.roomId)) {
+            if (prev.some((room) => room.id === roomId)) {
               return prev
             }
 
             return [
               ...prev,
               {
-                id: user.roomId,
+                id: roomId,
                 roomNumber: user.roomNumber ?? '',
               },
             ].sort((a, b) => a.roomNumber.localeCompare(b.roomNumber))

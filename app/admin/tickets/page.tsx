@@ -17,9 +17,6 @@ export default async function AdminTicketsPage() {
       profiles:user_id (
         full_name,
         phone
-      ),
-      categories:category_id (
-        name
       )
     `
     )
@@ -36,7 +33,7 @@ export default async function AdminTicketsPage() {
       category: ticket.category,
       status: ticket.status,
       created_at: ticket.created_at,
-      categories: ticket.categories,
+      categories: ticket.category ? { name: ticket.category } : null,
       rooms: ticket.rooms,
       profiles: ticket.profiles,
     }))
