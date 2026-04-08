@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -26,6 +26,63 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const [error, setError] = useState('')
   const router = useRouter()
 
+  useEffect(() => {
+    const supabase = createClient()
+    let isDisposed = false
+
+    const bootstrapInviteSession = async () => {
+      const hash = window.location.hash.startsWith('#')
+        ? window.location.hash.slice(1)
+        : window.location.hash
+      const hashParams = new URLSearchParams(hash)
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+      const linkType = hashParams.get('type')
+
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+
+        if (!error) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search)
+        }
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      const status = session?.user?.user_metadata?.status as string | undefined
+      const shouldGoSetPassword = linkType === 'invite' || status === 'pending'
+
+      if (!isDisposed && shouldGoSetPassword) {
+        router.replace('/auth/update-password')
+        router.refresh()
+      }
+    }
+
+    void bootstrapInviteSession()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const status = session?.user?.user_metadata?.status as string | undefined
+      if (status === 'pending') {
+        setTimeout(() => {
+          router.replace('/auth/update-password')
+          router.refresh()
+        }, 0)
+      }
+    })
+
+    return () => {
+      isDisposed = true
+      subscription.unsubscribe()
+    }
+  }, [router])
+
   const handleLogin = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     const supabase = createClient()
@@ -43,11 +100,17 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       if (data.user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, is_active')
           .eq('id', data.user.id)
           .single()
 
-        if (profile?.role === 'admin') {
+        if (profile && !profile.is_active) {
+          await supabase.auth.signOut()
+          setError('บัญชีนี้ถูกระงับการใช้งานชั่วคราว กรุณาติดต่อผู้ดูแลระบบ')
+          return
+        }
+
+        if (profile?.role === 'admin' || profile?.role === 'owner') {
           router.push('/admin')
         } else {
           router.push('/resident')
@@ -111,7 +174,15 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                   {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
                 </Button>
                 <FieldDescription className="text-center">
-                  ไม่มีบัญชี? โปรดติดต่อแอดมิน{' '}
+                  ไม่มีบัญชี?{' '}
+                  <Link
+                    href="https://lin.ee/OHWca5o"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline-offset-4 hover:underline"
+                  >
+                    ติดต่อแอดมิน
+                  </Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>

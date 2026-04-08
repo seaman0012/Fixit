@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
   const _next = searchParams.get('next')
-  const next = _next?.startsWith('/') ? _next : '/'
+  const next = _next?.startsWith('/') ? _next : type === 'invite' ? '/auth/update-password' : '/'
 
   if (token_hash && type) {
     const supabase = await createClient()
@@ -19,6 +19,33 @@ export async function GET(request: NextRequest) {
       token_hash,
     })
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        const fullName =
+          (user.user_metadata?.full_name as string | undefined) || user.email || 'User'
+        const phone = (user.user_metadata?.phone as string | undefined) || null
+        const role = (user.user_metadata?.role as string | undefined) || 'resident'
+        const roomId = (user.user_metadata?.room_id as string | undefined) || null
+
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          email: user.email ?? '',
+          full_name: fullName,
+          phone,
+          role,
+          room_id: roomId,
+          is_active: true,
+          status: 'active',
+        })
+
+        if (roomId) {
+          await supabase.from('rooms').update({ status: 'occupied' }).eq('id', roomId)
+        }
+      }
+
       // redirect user to specified redirect URL or root of app
       redirect(next)
     } else {

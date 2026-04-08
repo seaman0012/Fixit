@@ -14,6 +14,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { format } from 'date-fns'
+import { useDebounce } from 'use-debounce'
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Search } from 'lucide-react'
 
 import { categoryConfig, statusConfig } from '@/lib/constants'
@@ -42,9 +43,12 @@ export type DataTableTicket = {
   id: string
   title: string
   description: string | null
-  category: string
+  category: string | null
   status: string
   created_at: string
+  categories?: {
+    name: string
+  } | null
   rooms?: {
     room_number: string
   } | null
@@ -63,6 +67,7 @@ interface DataTableProps {
   showPagination?: boolean
   showStatusFilter?: boolean
   showViewAllButton?: boolean
+  showStatusCountBadges?: boolean
 }
 
 export function DataTable({
@@ -74,13 +79,15 @@ export function DataTable({
   showPagination = true,
   showStatusFilter = true,
   showViewAllButton = true,
+  showStatusCountBadges = false,
 }: DataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [searchQuery, setSearchQuery] = React.useState('')
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300)
 
   const searchedTickets = React.useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
+    const query = debouncedSearchQuery.trim().toLowerCase()
 
     if (!query) {
       return tickets
@@ -95,14 +102,14 @@ export function DataTable({
         (ticket.profiles?.phone || '').toLowerCase().includes(query)
       )
     })
-  }, [tickets, searchQuery])
+  }, [tickets, debouncedSearchQuery])
 
   const columns = React.useMemo<ColumnDef<DataTableTicket>[]>(() => {
     const baseColumns: ColumnDef<DataTableTicket>[] = [
       {
         accessorKey: 'title',
-        size: 500,
-        header: () => <div className="w-full pl-2 text-left">หัวข้อ</div>,
+        size: 300,
+        header: 'หัวข้อ',
         cell: ({ row }) => (
           <div className="flex w-full flex-col gap-1 pl-2">
             <Link
@@ -118,17 +125,23 @@ export function DataTable({
       {
         accessorKey: 'category',
         size: 120,
-        header: () => <div className="w-full text-left">หมวดหมู่</div>,
-        cell: ({ row }) => (
-          <Badge variant="outline" className="text-muted-foreground px-1.5">
-            {categoryConfig[row.original.category as keyof typeof categoryConfig]}
-          </Badge>
-        ),
+        header: 'หมวดหมู่',
+        cell: ({ row }) => {
+          const categoryKey = row.original.categories?.name || row.original.category
+          const categoryLabel = categoryKey
+            ? categoryConfig[categoryKey as keyof typeof categoryConfig]
+            : 'N/A'
+          return (
+            <Badge variant="outline" className="px-1.5">
+              {categoryLabel}
+            </Badge>
+          )
+        },
       },
       {
         accessorKey: 'status',
         size: 120,
-        header: () => <div className="w-full text-left">สถานะ</div>,
+        header: 'สถานะ',
         filterFn: (row, columnId, filterValue) => {
           if (!filterValue || filterValue === 'all') {
             return true
@@ -142,7 +155,7 @@ export function DataTable({
           const statusValue = row.original.status
 
           return (
-            <Badge variant="outline" className="text-muted-foreground px-1.5">
+            <Badge variant="outline" className="px-1.5">
               {statusValue === 'completed' ? (
                 <StatusIcon className="dark:text-background size-3 fill-green-500 text-white dark:fill-green-400" />
               ) : statusValue === 'cancelled' ? (
@@ -160,7 +173,7 @@ export function DataTable({
       {
         id: 'room',
         size: 80,
-        header: () => <div className="w-full text-left">ห้อง</div>,
+        header: 'ห้อง',
         cell: ({ row }) => <span>{row.original.rooms?.room_number || '-'}</span>,
       },
       {
@@ -193,7 +206,7 @@ export function DataTable({
     if (showReporter) {
       baseColumns.splice(3, 0, {
         id: 'reporter',
-        header: 'ผู้แจ้ง',
+        header: () => <div className="text-muted-foreground w-full text-left">ผู้แจ้ง</div>,
         cell: ({ row }) => (
           <div className="flex flex-col gap-0.5">
             <span>{row.original.profiles?.full_name || 'Unknown'}</span>
@@ -235,13 +248,26 @@ export function DataTable({
   })
 
   const statusFilterValue = (table.getColumn('status')?.getFilterValue() as string) ?? 'all'
+  const statusCounts = React.useMemo(() => {
+    return tickets.reduce(
+      (acc, ticket) => {
+        acc.all += 1
+        if (ticket.status === 'pending') acc.pending += 1
+        if (ticket.status === 'in_progress') acc.inProgress += 1
+        if (ticket.status === 'completed') acc.completed += 1
+        if (ticket.status === 'cancelled') acc.cancelled += 1
+        return acc
+      },
+      { all: 0, pending: 0, inProgress: 0, completed: 0, cancelled: 0 }
+    )
+  }, [tickets])
 
   return (
     <div className="w-full">
-      <div className="flex flex-col gap-3 pb-4 md:flex-row md:items-center">
+      <div className="flex flex-col gap-3 pb-4 md:flex-row-reverse md:items-center">
         <div className="flex flex-1 items-center gap-2">
           {showStatusFilter ? (
-            <div className="w-full md:max-w-xl">
+            <div className="md:place ml-auto w-full md:max-w-xl">
               <Select
                 value={statusFilterValue}
                 onValueChange={(value) => table.getColumn('status')?.setFilterValue(value)}
@@ -264,19 +290,33 @@ export function DataTable({
                 onValueChange={(value) => table.getColumn('status')?.setFilterValue(value)}
                 className="hidden md:flex md:w-full"
               >
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="all">ทั้งหมด</TabsTrigger>
-                  <TabsTrigger className="w-full" value="pending">
-                    รอดำเนินการ
+                <TabsList className="grid grid-cols-5">
+                  <TabsTrigger value="all" className="w-full gap-1">
+                    <span>ทั้งหมด</span>
                   </TabsTrigger>
-                  <TabsTrigger className="w-full" value="in_progress">
-                    กำลังดำเนินการ
+                  <TabsTrigger className="w-full gap-1" value="pending">
+                    <span>รอดำเนินการ</span>
+                    {showStatusCountBadges ? (
+                      <Badge variant="ghost">{statusCounts.pending}</Badge>
+                    ) : null}
                   </TabsTrigger>
-                  <TabsTrigger className="w-full" value="completed">
-                    เสร็จสิ้น
+                  <TabsTrigger className="w-full gap-1" value="in_progress">
+                    <span>ดำเนินการ</span>
+                    {showStatusCountBadges ? (
+                      <Badge variant="ghost">{statusCounts.inProgress}</Badge>
+                    ) : null}
                   </TabsTrigger>
-                  <TabsTrigger className="w-full" value="cancelled">
-                    ยกเลิก
+                  <TabsTrigger className="w-full gap-1" value="completed">
+                    <span>เสร็จสิ้น</span>
+                    {showStatusCountBadges ? (
+                      <Badge variant="ghost">{statusCounts.completed}</Badge>
+                    ) : null}
+                  </TabsTrigger>
+                  <TabsTrigger className="w-full gap-1" value="cancelled">
+                    <span>ยกเลิก</span>
+                    {showStatusCountBadges ? (
+                      <Badge variant="ghost">{statusCounts.cancelled}</Badge>
+                    ) : null}
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -284,7 +324,7 @@ export function DataTable({
           ) : null}
         </div>
         {showSearch ? (
-          <InputGroup className="w-full max-w-3xs items-center">
+          <InputGroup className="w-full max-w-xs items-center">
             <InputGroupInput
               placeholder="ค้นหา..."
               value={searchQuery}
@@ -310,7 +350,11 @@ export function DataTable({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} style={{ width: header.getSize() }}>
+                  <TableHead
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className="text-muted-foreground"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}

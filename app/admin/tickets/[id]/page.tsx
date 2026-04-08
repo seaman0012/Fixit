@@ -64,6 +64,15 @@ export default async function AdminTicketDetailPage({
   const { id } = await params
   const supabase = await createClient()
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const profileQuery = user?.id
+    ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+    : { data: null }
+  const profileData = profileQuery.data
+
   // ดึงข้อมูล ticket
   const { data: ticket, error } = (await supabase
     .from('tickets')
@@ -77,6 +86,9 @@ export default async function AdminTicketDetailPage({
         full_name,
         email,
         phone
+      ),
+      categories:category_id (
+        name
       )
     `
     )
@@ -168,7 +180,7 @@ export default async function AdminTicketDetailPage({
             </CardContent>
           </Card>
 
-          <StatusUpdateForm ticket={ticket} />
+          <StatusUpdateForm ticket={ticket} readOnly={profileData?.role === 'owner'} />
 
           <CommentSection ticketId={id} initialComments={comments} userRole="admin" />
         </div>
@@ -226,7 +238,10 @@ export default async function AdminTicketDetailPage({
                 <div>
                   <p className="text-sm font-medium">ประเภท</p>
                   <p className="text-muted-foreground text-sm">
-                    {categoryConfig[ticket.category as keyof typeof categoryConfig]}
+                    {categoryConfig[
+                      ((ticket as any).categories?.name ||
+                        (ticket as any).category) as keyof typeof categoryConfig
+                    ] || 'N/A'}
                   </p>
                 </div>
               </div>

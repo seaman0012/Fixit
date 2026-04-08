@@ -53,8 +53,10 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_active: boolean
           phone: string | null
           role: string
+          status: string
           room_id: string | null
           updated_at: string | null
         }
@@ -63,8 +65,10 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_active?: boolean
           phone?: string | null
           role: string
+          status?: string
           room_id?: string | null
           updated_at?: string | null
         }
@@ -73,8 +77,10 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_active?: boolean
           phone?: string | null
           role?: string
+          status?: string
           room_id?: string | null
           updated_at?: string | null
         }

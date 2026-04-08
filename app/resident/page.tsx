@@ -50,6 +50,7 @@ export default async function ResidentPage() {
       category: ticket.category,
       status: ticket.status,
       created_at: ticket.created_at,
+      categories: ticket.category ? { name: ticket.category } : null,
       rooms: ticket.rooms,
     }))
 

@@ -26,6 +26,10 @@ export default async function ResidentLayout({ children }: { children: React.Rea
     .eq('id', user.id)
     .single()) as { data: any }
 
+  if (!profile?.is_active) {
+    redirect('/auth/error?error=account_suspended')
+  }
+
   if (!profile || profile.role !== 'resident') {
     redirect('/admin')
   }

@@ -41,7 +41,9 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/auth')
+  const pathname = request.nextUrl.pathname
+  const isAuthRoute = pathname.startsWith('/auth')
+  const isAuthErrorRoute = pathname === '/auth/error'
 
   // If unauthenticated and not on auth routes, send to login.
   if (!user && !isAuthRoute) {
@@ -53,17 +55,36 @@ export async function updateSession(request: NextRequest) {
   // If authenticated user opens auth routes, redirect by role.
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
+    const isUpdatePasswordRoute = pathname === '/auth/update-password'
+
+    if (isUpdatePasswordRoute) {
+      return supabaseResponse
+    }
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, is_active, status')
       .eq('id', user.id)
       .single()
 
-    if (profile?.role === 'admin') {
+    if (profile && !profile.is_active) {
+      // Allow suspended users to open the dedicated error page without redirect loops.
+      if (isAuthErrorRoute) {
+        return supabaseResponse
+      }
+
+      url.pathname = '/auth/error'
+      url.search = ''
+      url.searchParams.set('error', 'account_suspended')
+    } else if (profile?.role === 'admin') {
       url.pathname = '/admin'
+      url.search = ''
+    } else if (!profile) {
+      // If profile cannot be read yet (RLS/race), don't force a dashboard redirect from auth pages.
+      return supabaseResponse
     } else {
       url.pathname = '/resident'
+      url.search = ''
     }
 
     return NextResponse.redirect(url)

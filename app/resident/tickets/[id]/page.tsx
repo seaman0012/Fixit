@@ -79,6 +79,9 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
       profiles:user_id (
         full_name,
         email
+      ),
+      categories:category_id (
+        name
       )
     `
     )
@@ -209,7 +212,10 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                 <div>
                   <p className="text-sm font-medium">ประเภท</p>
                   <p className="text-muted-foreground text-sm">
-                    {categoryConfig[(ticket as any).category as keyof typeof categoryConfig]}
+                    {categoryConfig[
+                      ((ticket as any).categories?.name ||
+                        (ticket as any).category) as keyof typeof categoryConfig
+                    ] || 'N/A'}
                   </p>
                 </div>
               </div>

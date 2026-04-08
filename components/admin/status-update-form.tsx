@@ -29,9 +29,10 @@ interface StatusUpdateFormProps {
     id: string
     status: string
   }
+  readOnly?: boolean
 }
 
-export default function StatusUpdateForm({ ticket }: StatusUpdateFormProps) {
+export default function StatusUpdateForm({ ticket, readOnly = false }: StatusUpdateFormProps) {
   const router = useRouter()
   const [status, setStatus] = useState(ticket.status)
   const [loading, setLoading] = useState(false)
@@ -82,8 +83,8 @@ export default function StatusUpdateForm({ ticket }: StatusUpdateFormProps) {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="status">สถานะ</FieldLabel>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger id="status">
+            <Select value={status} onValueChange={setStatus} disabled={readOnly}>
+              <SelectTrigger id="status" disabled={readOnly}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -103,7 +104,7 @@ export default function StatusUpdateForm({ ticket }: StatusUpdateFormProps) {
           <Field>
             <Button
               onClick={handleUpdate}
-              disabled={loading || status === ticket.status}
+              disabled={loading || status === ticket.status || readOnly}
               className="w-full"
             >
               <Save data-icon="inline-start" />

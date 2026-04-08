@@ -24,6 +24,9 @@ export default async function AnalyticsPage() {
       *,
       rooms:room_id (
         room_number
+      ),
+      categories:category_id (
+        name
       )
     `
     )
@@ -35,7 +38,10 @@ export default async function AnalyticsPage() {
 
   // วิเคราะห์ข้อมูล
   const categoryStats = Object.entries(categoryConfig).map(([key, label]) => {
-    const count = tickets.filter((ticket: any) => ticket.category === key).length
+    const count = tickets.filter((ticket: any) => {
+      const categoryName = ticket.categories?.name || ticket.category
+      return categoryName === key
+    }).length
     return { key, category: label, count }
   })
 
@@ -97,9 +103,6 @@ export default async function AnalyticsPage() {
     <div className="@container/main flex flex-col gap-6">
       <div>
         <h1 className="text-3xl font-bold">วิเคราะห์ข้อมูล</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          ข้อมูลสถิติและแนวโน้มเพื่อช่วยวางแผนการดูแลหอพัก
-        </p>
       </div>
 
       <div className="*:from-primary/5 *:to-card grid grid-cols-1 gap-4 *:bg-linear-to-t *:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">

@@ -32,20 +32,24 @@ import {
   FieldSeparator,
   FieldSet,
 } from '@/components/ui/field'
+import { categoryConfig } from '@/lib/constants'
 
-const categoryOptions = [
-  { value: 'electrical', label: 'ไฟฟ้า' },
-  { value: 'plumbing', label: 'ประปา' },
-  { value: 'air_conditioning', label: 'เครื่องปรับอากาศ' },
-  { value: 'furniture', label: 'เฟอร์นิเจอร์' },
-  { value: 'other', label: 'อื่นๆ' },
-]
+type CategoryOption = {
+  id: string
+  name: string
+}
+
+function getCategoryLabel(categoryName: string) {
+  return categoryConfig[categoryName as keyof typeof categoryConfig] ?? categoryName
+}
 
 export default function NewTicketPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [roomLoading, setRoomLoading] = useState(true)
+  const [categoryLoading, setCategoryLoading] = useState(true)
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([])
   const [residentRoomId, setResidentRoomId] = useState('')
   const [error, setError] = useState('')
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
@@ -53,7 +57,7 @@ export default function NewTicketPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: '',
+    categoryId: '',
     roomNumber: '',
   })
   const [imageFiles, setImageFiles] = useState<File[]>([])
@@ -102,6 +106,29 @@ export default function NewTicketPage() {
     }
 
     loadResidentRoom()
+  }, [])
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const supabase = createClient()
+        const categoryClient = supabase as any
+        const { data, error } = await categoryClient
+          .from('categories')
+          .select('id, name')
+          .order('name', { ascending: true })
+
+        if (error) throw error
+
+        setCategoryOptions((data ?? []) as CategoryOption[])
+      } catch {
+        setError('ไม่สามารถโหลดประเภทการแจ้งซ่อมได้ กรุณาลองใหม่อีกครั้ง')
+      } finally {
+        setCategoryLoading(false)
+      }
+    }
+
+    loadCategories()
   }, [])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,8 +191,14 @@ export default function NewTicketPage() {
     setError('')
 
     // Validation
-    if (!formData.title || !formData.description || !formData.category) {
+    if (!formData.title || !formData.description || !formData.categoryId) {
       setError('กรุณากรอกข้อมูลให้ครบถ้วน')
+      setLoading(false)
+      return
+    }
+
+    if (categoryLoading) {
+      setError('กำลังโหลดประเภทการแจ้งซ่อม กรุณาลองอีกครั้ง')
       setLoading(false)
       return
     }
@@ -208,7 +241,7 @@ export default function NewTicketPage() {
           user_id: user.id,
           title: formData.title,
           description: formData.description,
-          category: formData.category,
+          category_id: formData.categoryId,
           room_id: residentRoomId,
           image_urls: imageUrls,
           status: 'pending',
@@ -219,13 +252,21 @@ export default function NewTicketPage() {
       if (error) throw error
 
       try {
-        await fetch('/api/line/notify-admin', {
+        const notifyResponse = await fetch('/api/line/notify-admin', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ ticketId: data.id }),
         })
+
+        if (!notifyResponse.ok) {
+          const notifyBody = await notifyResponse.json().catch(() => null)
+          console.error('LINE notify failed', {
+            status: notifyResponse.status,
+            body: notifyBody,
+          })
+        }
       } catch (notifyError) {
         console.error('Failed to notify admins via LINE', notifyError)
       }
@@ -251,12 +292,11 @@ export default function NewTicketPage() {
   }
 
   const handleReportAnother = () => {
-    // Reset form
     setFormData((prev) => ({
       ...prev,
       title: '',
       description: '',
-      category: '',
+      categoryId: '',
     }))
     setImageFiles([])
     previewUrls.forEach((url) => URL.revokeObjectURL(url))
@@ -286,14 +326,14 @@ export default function NewTicketPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
-            {error && (
+            {error ? (
               <div
                 role="alert"
                 className="bg-destructive/10 text-destructive rounded-md p-3 text-sm"
               >
                 {error}
               </div>
-            )}
+            ) : null}
             <FieldGroup>
               <FieldSet>
                 <Field>
@@ -309,27 +349,36 @@ export default function NewTicketPage() {
                     ดึงจากข้อมูลผู้พักอาศัยอัตโนมัติ
                   </FieldDescription>
                 </Field>
+
                 <Field>
                   <FieldLabel htmlFor="category">
                     ประเภท <span className="text-destructive">*</span>
                   </FieldLabel>
                   <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
-                    required
+                    value={formData.categoryId}
+                    onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                    disabled={categoryLoading}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="เลือกประเภทอุปกรณ์" />
+                      <SelectValue
+                        placeholder={
+                          categoryLoading ? 'กำลังโหลดประเภทการแจ้งซ่อม...' : 'เลือกประเภทอุปกรณ์'
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent position="popper">
                       {categoryOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
+                        <SelectItem key={option.id} value={option.id}>
+                          {getCategoryLabel(option.name)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  <FieldDescription className="text-muted-foreground mt-1 text-xs">
+                    เลือกประเภทจากรายการจริงในระบบ
+                  </FieldDescription>
                 </Field>
+
                 <Field>
                   <FieldLabel htmlFor="title">
                     หัวข้อ <span className="text-destructive">*</span>
@@ -342,6 +391,7 @@ export default function NewTicketPage() {
                     required
                   />
                 </Field>
+
                 <Field>
                   <FieldLabel htmlFor="description">
                     รายละเอียด <span className="text-destructive">*</span>
@@ -356,7 +406,9 @@ export default function NewTicketPage() {
                   />
                 </Field>
               </FieldSet>
+
               <FieldSeparator />
+
               <Field>
                 <FieldLabel htmlFor="images">
                   รูปภาพประกอบ <span className="text-destructive">*</span>
@@ -385,10 +437,10 @@ export default function NewTicketPage() {
                     onChange={handleImageChange}
                   />
 
-                  {previewUrls.length > 0 && (
+                  {previewUrls.length > 0 ? (
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                       {previewUrls.map((url, index) => (
-                        <div key={index} className="relative aspect-square">
+                        <div key={url} className="relative aspect-square">
                           <Image
                             src={url}
                             alt={`Preview ${index + 1}`}
@@ -407,14 +459,14 @@ export default function NewTicketPage() {
                         </div>
                       ))}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </Field>
 
               <div className="flex flex-col-reverse gap-3 sm:flex-row">
                 <Button
                   type="submit"
-                  disabled={loading || uploading || roomLoading}
+                  disabled={loading || uploading || roomLoading || categoryLoading}
                   className="w-full sm:flex-1"
                 >
                   {uploading ? (
@@ -446,7 +498,6 @@ export default function NewTicketPage() {
         </CardContent>
       </Card>
 
-      {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={handleSuccessDialogOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
